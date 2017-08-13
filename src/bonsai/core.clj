@@ -17,10 +17,10 @@
 (defmacro defeffect [app key args body]
   `(define-effect! ~app ~key (fn ~args ~body)))
 
-(defn apply-effects! [app effects]
+(defn apply-effects! [app effects handle!]
   (doseq [[effect args] effects]
     (let [f (-> app ::!effect-handlers deref effect)]
-      (apply f (partial handle! app) args))))
+      (apply f handle! args))))
 
 (defn with-effect [state effect & args]
   (with-meta state (update (meta state) ::effects conj [effect args])))
@@ -31,7 +31,7 @@
 (defn handle! [app key & args]
   (let [f (-> app ::!event-handlers deref key)
         state (swap! (::!state app) #(apply f % args))]
-    (apply-effects! app (-> state meta ::effects))
+    (apply-effects! app (-> state meta ::effects) (partial handle! app))
     (swap! (::!state app) without-effects)
     app))
 

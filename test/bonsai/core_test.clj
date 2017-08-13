@@ -1,7 +1,3 @@
 (ns bonsai.core-test
-  (:require [clojure.test :refer :all]
-            [bonsai.core :refer :all]))
-
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+  (:require [bonsai.core :as sut]
+            [clojure.test :as t]))
