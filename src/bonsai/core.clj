@@ -1,65 +1,41 @@
 (ns bonsai.core)
 
-(defn create [!state]
-  {::!state !state
-   ::!event-handlers (atom {})
-   ::!effect-handlers (atom {})})
+(defmulti event identity)
+(defmulti effect identity)
 
-(defn define-event! [app key f]
-  (swap! (::!event-handlers app) #(assoc % key f)))
+(defmethod event :default [ev-name]
+  (throw (str "No event called " ev-name)))
 
-(defn define-effect! [app key f]
-  (swap! (::!effect-handlers app) #(assoc % key f)))
+(defmethod effect :default [ef-name]
+  (throw (str "No effect called " ef-name)))
 
-(defmacro defevent [app key args body]
-  `(define-event! ~app ~key (fn ~args ~body)))
+(def apply-effects!)
 
-(defmacro defeffect [app key args body]
-  `(define-effect! ~app ~key (fn ~args ~body)))
+(defmethod event :foo []
+  (println "hi"))
 
-(defn with-effect [state effect & args]
-  (with-meta state (update (meta state) ::effects conj [effect args])))
+(event :foo)
 
-(defn apply-effects! [app effects handle!]
-  (doseq [[effect args] effects]
-    (let [f (-> app ::!effect-handlers deref effect)]
-      (apply f handle! args))))
+(defn handle! [state! ev-name & args]
+  (swap! state! #(apply event ev-name % args))
+  (apply-effects! state!))
 
-(defn without-effects [state]
-  (with-meta state (dissoc (meta state) ::effects)))
+;; (defn apply-effects! [state!]
+;;   (doseq [[ef-name args] ()]
+;;     (apply effect ef-name (partial handle! state!) args))
+;;   (with-meta state (dissoc (meta state) ::effects)))
 
-(defn handle! [app key & args]
-  (let [f (-> app ::!event-handlers deref key)
-        state (swap! (::!state app) #(apply f % args))]
-    (apply-effects! app (-> state meta ::effects) (partial handle! app))
-    (swap! (::!state app) without-effects)
-    app))
+;; (defn with-effect [state effect & args]
+;;   (with-meta state (update (meta state) ::effects conj [effect args])))
 
 ;; Testing...
 
-(def state (atom {:val 0}))
-(def app (create state))
+(def app (atom {:val 0}))
 
-(defevent app :up [state]
-  (update state :val inc))
-
-(defevent app :down [state]
-  (update state :val dec))
-
-(defevent app :add [state & args]
-  (apply update state :val + args))
-
-(defevent app :slow-add-pi [state]
+(defmethod event :add [state n]
   (-> state
-      (with-effect :compute-pi :add)))
+      (update :val #(+ n %))))
 
-(defeffect app :compute-pi [handle! response-event]
-  (future (do (Thread/sleep 3000)
-              (handle! response-event 3.14)
-              (println "fired!"))))
+(handle! app :add 10)
 
-(handle! app :up)
-(handle! app :add 5)
-(handle! app :slow-add-pi)
-
-@state
+@app
