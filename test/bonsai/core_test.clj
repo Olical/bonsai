@@ -1,7 +1,6 @@
 (ns bonsai.core-test
   (:require [bonsai.core :as b]
-            [clojure.test :as t]
-            [bond.james :as bond]))
+            [clojure.test :as t]))
 
 (defn get-foo
   "Effect: Passes :foo to the given action fn."
@@ -17,6 +16,8 @@
   "Extracts the effects out of the meta of an object."
   [o]
   (-> o meta :bonsai.core/effects))
+
+(t/deftest next!-test)
 
 (t/deftest with-effect-test
   (t/testing "adds an effect to the meta data"
@@ -35,8 +36,8 @@
 
 (t/deftest consume-effects!-test
   (t/testing "executes the effects with next! and removes them"
-    (bond/with-spy [get-foo]
-      (let [state! (atom (b/with-effect {} get-foo val-to))]
-        (t/is (= [[get-foo [val-to]]] (-> state! deref effects)))
-        (b/consume-effects! state!)
-        (t/is (= nil (-> state! deref effects)))))))
+    (let [state! (atom (b/with-effect {} get-foo val-to))]
+      (t/is (= [[get-foo [val-to]]] (-> state! deref effects)))
+      (b/consume-effects! state!)
+      (t/is (= nil (-> state! deref effects)))
+      (t/is (= {:val :foo} (-> state! deref))))))
