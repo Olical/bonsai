@@ -1,41 +1,42 @@
 (ns bonsai.core)
 
-(defmulti event identity)
-(defmulti effect identity)
+(def next!)
 
-(defmethod event :default [ev-name]
-  (throw (str "No event called " ev-name)))
+(defn with-effect [state effect & args]
+  (vary-meta state update ::effects conj [effect args]))
 
-(defmethod effect :default [ef-name]
-  (throw (str "No effect called " ef-name)))
+(defn without-effects [state]
+  (vary-meta state dissoc ::effects))
 
-(def apply-effects!)
+(defn consume-effects! [state!]
+  (doseq [[effect args] (-> state! deref meta ::effects)]
+    (apply effect (partial next! state!) args))
+  (swap! state! without-effects))
 
-(defmethod event :foo []
-  (println "hi"))
-
-(event :foo)
-
-(defn handle! [state! ev-name & args]
-  (swap! state! #(apply event ev-name % args))
-  (apply-effects! state!))
-
-;; (defn apply-effects! [state!]
-;;   (doseq [[ef-name args] ()]
-;;     (apply effect ef-name (partial handle! state!) args))
-;;   (with-meta state (dissoc (meta state) ::effects)))
-
-;; (defn with-effect [state effect & args]
-;;   (with-meta state (update (meta state) ::effects conj [effect args])))
+(defn next! [state! action & args]
+  (apply swap! state! action args)
+  (consume-effects! state!))
 
 ;; Testing...
 
 (def app (atom {:val 0}))
 
-(defmethod event :add [state n]
-  (-> state
-      (update :val #(+ n %))))
+(defn after-ms [next! ms message & args]
+  (future
+    (println "start")
+    (Thread/sleep ms)
+    (apply next! message args)
+    (println "end")))
 
-(handle! app :add 10)
+(defn add [state n]
+  (-> state
+      (update :val + n)))
+
+(defn slow-add [state a b]
+  (-> state
+      (add a)
+      (with-effect after-ms 1000 add b)))
+
+(next! app slow-add 10 5)
 
 @app
