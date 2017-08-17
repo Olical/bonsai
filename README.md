@@ -1,4 +1,4 @@
-# bonsai
+# bonsai [![Clojars Project](https://img.shields.io/clojars/v/olical/bonsai.svg)](https://clojars.org/olical/bonsai)
 
 Minimalistic state management.
 
