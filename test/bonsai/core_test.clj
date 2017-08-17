@@ -12,6 +12,12 @@
   [state v]
   (assoc state :val v))
 
+(defn val-to-foo-eff
+  "Action: Sets the value to foo through an effect."
+  [state]
+  (-> state
+      (b/with-effect get-foo val-to)))
+
 (defn effects
   "Extracts the effects out of the meta of an object."
   [o]
@@ -40,4 +46,14 @@
       (t/is (= [[get-foo [val-to]]] (-> state! deref effects)))
       (b/consume-effects! state!)
       (t/is (= nil (-> state! deref effects)))
+      (t/is (= {:val :foo} (-> state! deref))))))
+
+(t/deftest next!-test
+  (t/testing "applies the action to the state"
+    (let [state! (atom {})]
+      (b/next! state! val-to :foo)
+      (t/is (= {:val :foo} (-> state! deref)))))
+  (t/testing "effects can be applied from actions"
+    (let [state! (atom {})]
+      (b/next! state! val-to-foo-eff)
       (t/is (= {:val :foo} (-> state! deref))))))
