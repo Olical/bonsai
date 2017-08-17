@@ -9,9 +9,10 @@
   (vary-meta state dissoc ::effects))
 
 (defn consume-effects! [state!]
-  (doseq [[effect args] (-> state! deref meta ::effects)]
-    (apply effect (partial next! state!) args))
-  (swap! state! without-effects))
+  (let [effects (-> state! deref meta ::effects)]
+    (swap! state! without-effects)
+    (doseq [[effect args] effects]
+      (apply effect (partial next! state!) args))))
 
 (defn next! [state! action & args]
   (apply swap! state! action args)

@@ -1,80 +1,42 @@
 (ns bonsai.core-test
   (:require [bonsai.core :as b]
-            [clojure.test :as t]))
+            [clojure.test :as t]
+            [bond.james :as bond]))
 
-(defn atom? [x]
-  (instance? clojure.lang.Atom x))
+(defn get-foo
+  "Effect: Passes :foo to the given action fn."
+  [next! f]
+  (next! f :foo))
 
-(defn init []
-  (b/create (atom {})))
+(defn val-to
+  "Action: Replaces val with the given value in the state."
+  [state v]
+  (assoc state :val v))
 
-(defn state [app]
-  (-> app :bonsai.core/!state deref))
+(defn effects
+  "Extracts the effects out of the meta of an object."
+  [o]
+  (-> o meta :bonsai.core/effects))
 
-(defn events [app]
-  (-> app :bonsai.core/!event-handlers deref))
+(t/deftest with-effect-test
+  (t/testing "adds an effect to the meta data"
+    (t/is (= [[+ [5 10]]] (-> {} (b/with-effect + 5 10) effects))))
+  (t/testing "can add multiple effects"
+    (let [state (-> {}
+                    (b/with-effect + 5)
+                    (b/with-effect - 10))]
+      (t/is (= [[- [10]] [+ [5]]] (effects state))))))
 
-(defn effects [app]
-  (-> app :bonsai.core/!effect-handlers deref))
+(t/deftest without-effects-test
+  (t/testing "does nothing to nil effects"
+    (t/is (= nil (-> {} b/without-effects effects))))
+  (t/testing "removes any effects"
+    (t/is (= nil (-> {} (b/with-effect + 5 10) b/without-effects effects)))))
 
-(t/deftest bonsai-test
-  (t/testing "create"
-    (t/testing "builds a map of keys to atoms"
-      (let [app (init)]
-        (t/is (= (count (keys app)) 3))
-        (t/is (every? atom? (vals app)))
-        (t/is (= (map deref (vals app)) [{} {} {}])))))
-
-  (t/testing "define-event!"
-    (t/testing "associates an event key with a fn"
-      (let [app (init)]
-        (b/define-event! app :up inc)
-        (t/is (= (events app) {:up inc}))))
-    (t/testing "last association wins"
-      (let [app (init)]
-        (b/define-event! app :up inc)
-        (b/define-event! app :up dec)
-        (t/is (= (events app) {:up dec})))))
-
-  (t/testing "define-effect!"
-    (t/testing "associates an effect key with a fn"
-      (let [app (init)]
-        (b/define-effect! app :get identity)
-        (t/is (= (effects app) {:get identity}))))
-    (t/testing "last association wins"
-      (let [app (init)]
-        (b/define-effect! app :get identity)
-        (b/define-effect! app :get not)
-        (t/is (= (effects app) {:get not})))))
-
-  (t/testing "defevent"
-    (t/testing "performs a define-event! wrapped in an fn"
-      (let [app (init)]
-        (b/defevent app :foo [] :bar)
-        (t/is (= ((:foo (events app))) :bar)))))
-
-  (t/testing "defeffect"
-    (t/testing "performs a define-effect! wrapped in an fn"
-      (let [app (init)]
-        (b/defeffect app :foo [] :bar)
-        (t/is (= ((:foo (events app))) :bar)))))
-
-  (t/testing "with-effect"
-    (t/testing "adds an effect to the effects seq")
-    (t/testing "effects can have arguments")
-    (t/testing "there can be multiple effects"))
-
-  (t/testing "apply-effects!"
-    (t/testing "with no effects, does nothing")
-    (t/testing "with-effect it performs the effect")
-    (t/testing "the effects are consumed and removed after application"))
-
-  (t/testing "without-effects"
-    (t/testing "applied to nothing does nothing")
-    (t/testing "applied to effects removes them cleanly"))
-
-  (t/testing "handle!"
-    (t/testing "applies event handlers to the state")
-    (t/testing "applies effects to the state")
-    (t/testing "removes the effects when done")
-    (t/testing "returns the original application map")))
+(t/deftest consume-effects!-test
+  (t/testing "executes the effects with next! and removes them"
+    (bond/with-spy [get-foo]
+      (let [state! (atom (b/with-effect {} get-foo val-to))]
+        (t/is (= [[get-foo [val-to]]] (-> state! deref effects)))
+        (b/consume-effects! state!)
+        (t/is (= nil (-> state! deref effects)))))))
