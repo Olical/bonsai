@@ -15,15 +15,12 @@
 (defn val-to-foo-eff
   "Action: Sets the value to foo through an effect."
   [state]
-  (-> state
-      (b/with-effect get-foo val-to)))
+  (b/with-effect state get-foo val-to))
 
 (defn effects
   "Extracts the effects out of the meta of an object."
   [o]
   (-> o meta :bonsai.core/effects))
-
-(t/deftest next!-test)
 
 (t/deftest with-effect-test
   (t/testing "adds an effect to the meta data"
