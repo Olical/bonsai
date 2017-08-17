@@ -1,5 +1,4 @@
-# bonsai [![Clojars Project](https://img.shields.io/clojars/v/olical/bonsai.svg)](https://clojars.org/olical/bonsai)
-
+# bonsai [![Clojars Project](https://img.shields.io/clojars/v/olical/bonsai.svg)](https://clojars.org/olical/bonsai) [![Build Status](https://travis-ci.org/Olical/bonsai.svg?branch=master)](https://travis-ci.org/Olical/bonsai)
 Minimalistic state management.
 
 Designed to work well with Reagent applications, supports both ClojureScript and Clojure.
