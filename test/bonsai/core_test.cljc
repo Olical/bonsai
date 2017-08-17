@@ -1,6 +1,7 @@
 (ns bonsai.core-test
   (:require [bonsai.core :as b]
-            [clojure.test :as t]))
+            [#?(:clj clojure.test
+                :cljs cljs.test) :as t]))
 
 (defn get-foo
   "Effect: Passes :foo to the given action fn."

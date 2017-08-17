@@ -1,6 +1,6 @@
 (ns bonsai.core)
 
-(def next!)
+(declare next!)
 
 (defn with-effect [state effect & args]
   (vary-meta state update ::effects conj [effect args]))
