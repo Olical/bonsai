@@ -55,3 +55,15 @@
     (let [state! (atom {})]
       (b/next! state! val-to-foo-eff)
       (t/is (= {:val :foo} (-> state! deref))))))
+
+(t/deftest consumer
+  (t/testing "a consumer can define actions and effects that can be used in conjunction with each other"
+    (let [state! (atom {:val 0})
+          calc-pi (fn [next! a] (next! a 3.14))
+          add (fn [state n] (-> state (update :val (partial + n))))
+          add-pi (fn [state] (-> state (b/with-effect calc-pi add)))]
+      (t/is (= {:val 0} (-> state! deref)))
+      (b/next! state! add 5)
+      (t/is (= {:val 5} (-> state! deref)))
+      (b/next! state! add-pi)
+      (t/is (= {:val 8.14} (-> state! deref))))))
