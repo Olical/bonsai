@@ -25,12 +25,12 @@ First add the current latest version (as indicated by the Clojars badge above) t
   (future                  ;; Drop into another thread.
     (Thread/sleep 1000)    ;; Wait for one second.
     (next! res-act 3.14))) ;; Pass the result onto the result handler action.
-    
+
 ;; Define an action that can add things to :val.
 (defn add [state n]
   (-> state
       (update :val (partial + n))))
-      
+
 ;; Notice we still haven't used anything from bonsai yet?
 ;; It's a pretty tiny library, most of what you do is plain ol' Clojure(Script).
 ;; Now let's define an action that uses the calc-pi effect.
