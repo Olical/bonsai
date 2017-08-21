@@ -29,7 +29,7 @@ First add the current latest version (as indicated by the Clojars badge above) t
 ;; Define an action that can add things to :val.
 (defn add [state n]
   (-> state
-      (update :val (partial + n))))
+      (update :val + n)))
 
 ;; Notice we still haven't used anything from bonsai yet?
 ;; It's a pretty tiny library, most of what you do is plain ol' Clojure(Script).
@@ -41,7 +41,7 @@ First add the current latest version (as indicated by the Clojars badge above) t
 
 ;; Now let's apply some actions!
 ;; We do that by asking bonsai to advance the state! to the next state! using an action.
-(bonsai/next! !state add 5)
+(bonsai/next! state! add 5)
 
 ;; 5 was added to the state.
 @state ;; {:val 5}
@@ -49,7 +49,7 @@ First add the current latest version (as indicated by the Clojars badge above) t
 ;; Actions with effects will have their effects applied.
 ;; We can use calc-pi which gives pi to an action we specify.
 ;; In this case, we ask calc-pi to give pi to add.
-(bonsai/next! !state add-pi)
+(bonsai/next! state! add-pi)
 
 ;; 3.14 was added to the state.
 @state ;; {:val 8.14}
