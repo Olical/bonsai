@@ -1,4 +1,4 @@
-(defproject olical/bonsai "0.1.0-SNAPSHOT"
+(defproject olical/bonsai "1.0.0"
   :description "Minimalistic state management."
   :url "https://github.com/Olical/bonsai"
   :license {:name "Unlicense"
