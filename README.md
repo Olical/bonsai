@@ -2,13 +2,17 @@
 
 Minimalistic state management.
 
-Designed to work well with Reagent applications, supports both ClojureScript and Clojure.
+Designed to work well with Reagent applications, supports both ClojureScript and Clojure. Feel free to use it in a UI or a server, it is a generic simple solution to state management.
 
-Inspired by Elm, Reagent, Redux et al.
+## Introduction
+
+Bonsai essentially consists of normal Clojure(Script) functions, some sort of atom as well as `with-effect` and `next!` calls. You should check out the source and the tests to see how simple it is for yourself.
+
+You can find an example UI project within the `example` directory, it's extremely simple but illustrates end to end usage.
 
 ## Usage
 
-First add the current latest version (as indicated by the Clojars badge above) to your `project.clj`. Then require `bonsai.core` as whatever you want, I'd recommend `bonsai` or just `b`, I'll use `bonsai` here.
+First add the current latest version of `olical/bonsai` (as indicated by the Clojars badge above) to your `project.clj`. Then require `bonsai.core` `:as` whatever you want, I'd recommend `bonsai` or just `b`, I'll use `bonsai` here.
 
 ```clojure
 ;; Create your application state atom, it can contain whatever you want.
@@ -51,9 +55,16 @@ First add the current latest version (as indicated by the Clojars badge above) t
 ;; In this case, we ask calc-pi to give pi to add.
 (bonsai/next! state! add-pi)
 
-;; 3.14 was added to the state after a second.
+;; Sleep until the effect is complete.
+(Thread/sleep 1500)
+
+;; 3.14 was added to the state after a little while.
 @state! ;; {:val 8.14}
 ```
+
+## Inspiration
+
+Inspired by Elm, Reagent, Redux, re-frame et al.
 
 ## Unlicenced
 
