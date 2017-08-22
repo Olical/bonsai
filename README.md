@@ -1,8 +1,8 @@
 # bonsai [![Build Status](https://travis-ci.org/Olical/bonsai.svg?branch=master)](https://travis-ci.org/Olical/bonsai) [![Clojars Project](https://img.shields.io/clojars/v/olical/bonsai.svg)](https://clojars.org/olical/bonsai)
 
-Minimalistic state management.
+Minimalistic state management for Clojure and ClojureScript.
 
-Designed to work well with Reagent applications, supports both ClojureScript and Clojure. Feel free to use it in a UI or a server, it is a generic simple solution to state management.
+Designed to work well with Reagent applications or anything that requires state that changes over time. Usually in response to some kind of user interaction.
 
 ## Introduction
 
