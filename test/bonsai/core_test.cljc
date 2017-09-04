@@ -41,20 +41,30 @@
 (t/deftest consume-effects!-test
   (t/testing "executes the effects with next! and removes them"
     (let [state! (atom (b/with-effect {} get-foo val-to))]
-      (t/is (= [[get-foo [val-to]]] (-> state! deref effects)))
+      (t/is (= [[get-foo [val-to]]] (-> @state! effects)))
       (b/consume-effects! state!)
-      (t/is (= nil (-> state! deref effects)))
-      (t/is (= {:val :foo} (-> state! deref))))))
+      (t/is (= nil (-> @state! effects)))
+      (t/is (= {:val :foo} @state!)))))
 
 (t/deftest next!-test
   (t/testing "applies the action to the state"
     (let [state! (atom {})]
       (b/next! state! val-to :foo)
-      (t/is (= {:val :foo} (-> state! deref)))))
+      (t/is (= {:val :foo} @state!))))
   (t/testing "effects can be applied from actions"
     (let [state! (atom {})]
       (b/next! state! val-to-foo-eff)
-      (t/is (= {:val :foo} (-> state! deref))))))
+      (t/is (= {:val :foo} @state!)))))
+
+(t/deftest next-test
+  (t/testing "creates a function that will apply the action to the state"
+    (let [state! (atom {})]
+      ((b/next state! val-to :foo))
+      (t/is (= {:val :foo} @state!))
+      (t/is (= (b/next state! val-to :foo)
+               (b/next state! val-to :foo)))
+      (t/is (not= (b/next state! val-to :foo)
+                  (b/next state! val-to :bar))))))
 
 (t/deftest consumer
   (t/testing "a consumer can define actions and effects that can be used in conjunction with each other"
@@ -62,8 +72,8 @@
           calc-pi (fn [next! a] (next! a 3.14))
           add (fn [state n] (-> state (update :val (partial + n))))
           add-pi (fn [state] (-> state (b/with-effect calc-pi add)))]
-      (t/is (= {:val 0} (-> state! deref)))
+      (t/is (= {:val 0} @state!))
       (b/next! state! add 5)
-      (t/is (= {:val 5} (-> state! deref)))
+      (t/is (= {:val 5} @state!))
       (b/next! state! add-pi)
-      (t/is (= {:val 8.14} (-> state! deref))))))
+      (t/is (= {:val 8.14} @state!)))))

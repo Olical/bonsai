@@ -1,6 +1,7 @@
 (ns bonsai.core
   "Minimalistic state management designed for Reagent and state that changes
-  over time.")
+  over time."
+  (:refer-clojure :exclude [next]))
 
 ;; Forward declaration to resolve a circular dependency between next! and
 ;; consume-effects!.
@@ -55,3 +56,12 @@
   [state! action & args]
   (apply swap! state! action args)
   (consume-effects! state!))
+
+(def next
+  "Exactly the same as next!, but it returns a function to be executed later
+  instead of applying the action immediately. It is memoized so that the same
+  arguments produce the same function reference, useful in Reagent event
+  handlers.
+
+  Ex: [:button {:on-click (next my-state-atom! some-action :some-arg :another-arg)}]"
+  (memoize (fn [& args] #(apply next! args))))
