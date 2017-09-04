@@ -1,11 +1,9 @@
 # bonsai changes
 
-## v2.0.0
+## v1.1.0
 
  * Various README and docstring improvements.
  * Lein test aliases.
- * Renamed `next!` to `step!`.
- * Added `stepper` which is the same as `step!` but it returns a function that will perform the `step!` when called. If you call `stepper` with the same arguments, the same fn reference is returned, great for Reagent event handlers.
  * Added assertions to make sure you pass functions in the right places.
 
 ## v1.0.0

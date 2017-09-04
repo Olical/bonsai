@@ -19,7 +19,7 @@
     [:div
      [:input {:type "text"
               :value text
-              :on-change #(bonsai/step! state! text-changed (-> % .-target .-value))}]
+              :on-change #(bonsai/next! state! text-changed (-> % .-target .-value))}]
      [:p (str/reverse text)]]))
 
 (defn root

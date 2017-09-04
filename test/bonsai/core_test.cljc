@@ -5,8 +5,8 @@
 
 (defn get-foo
   "Effect: Passes :foo to the given action fn."
-  [step! f]
-  (step! f :foo))
+  [next! f]
+  (next! f :foo))
 
 (defn val-to
   "Action: Replaces val with the given value in the state."
@@ -32,7 +32,8 @@
                     (b/with-effect - 10))]
       (t/is (= [[- [10]] [+ [5]]] (effects state)))))
   (t/testing "will throw on bad args"
-    (t/is (thrown-with-msg? AssertionError #"with-effect expects a function, got nil"
+    (t/is (thrown-with-msg? #?(:clj AssertionError
+                               :cljs js/Error) #"with-effect expects a function, got nil"
                             (b/with-effect {} nil :foo)))))
 
 (t/deftest without-effects-test
@@ -42,47 +43,35 @@
     (t/is (= nil (-> {} (b/with-effect + 5 10) b/without-effects effects)))))
 
 (t/deftest consume-effects!-test
-  (t/testing "executes the effects with step! and removes them"
+  (t/testing "executes the effects with next! and removes them"
     (let [state! (atom (b/with-effect {} get-foo val-to))]
       (t/is (= [[get-foo [val-to]]] (-> @state! effects)))
       (b/consume-effects! state!)
       (t/is (= nil (-> @state! effects)))
       (t/is (= {:val :foo} @state!)))))
 
-(t/deftest step!-test
+(t/deftest next!-test
   (t/testing "applies the action to the state"
     (let [state! (atom {})]
-      (b/step! state! val-to :foo)
+      (b/next! state! val-to :foo)
       (t/is (= {:val :foo} @state!))))
   (t/testing "effects can be applied from actions"
     (let [state! (atom {})]
-      (b/step! state! val-to-foo-eff)
+      (b/next! state! val-to-foo-eff)
       (t/is (= {:val :foo} @state!))))
   (t/testing "it warns you if you don't pass a function"
-    (t/is (thrown-with-msg? AssertionError #"step! expects a function, got nil"
-                            (b/step! (atom {}) nil)))))
-
-(t/deftest stepper-test
-  (t/testing "creates a function that will apply the action to the state"
-    (let [state! (atom {})]
-      ((b/stepper state! val-to :foo))
-      (t/is (= {:val :foo} @state!))
-      (t/is (= (b/stepper state! val-to :foo)
-               (b/stepper state! val-to :foo)))
-      (t/is (not= (b/stepper state! val-to :foo)
-                  (b/stepper state! val-to :bar)))))
-  (t/testing "it warns you if you don't pass a function"
-    (t/is (thrown-with-msg? AssertionError #"stepper expects a function, got nil"
-                            (b/stepper (atom {}) nil)))))
+    (t/is (thrown-with-msg? #?(:clj AssertionError
+                               :cljs js/Error) #"next! expects a function, got nil"
+                            (b/next! (atom {}) nil)))))
 
 (t/deftest consumer
   (t/testing "a consumer can define actions and effects that can be used in conjunction with each other"
     (let [state! (atom {:val 0})
-          calc-pi (fn [step! a] (step! a 3.14))
+          calc-pi (fn [next! a] (next! a 3.14))
           add (fn [state n] (-> state (update :val (partial + n))))
           add-pi (fn [state] (-> state (b/with-effect calc-pi add)))]
       (t/is (= {:val 0} @state!))
-      (b/step! state! add 5)
+      (b/next! state! add 5)
       (t/is (= {:val 5} @state!))
-      (b/step! state! add-pi)
+      (b/next! state! add-pi)
       (t/is (= {:val 8.14} @state!)))))

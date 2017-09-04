@@ -1,16 +1,15 @@
 (ns bonsai.core
   "Minimalistic state management designed for Reagent and state that changes
-  over time."
-  (:refer-clojure :exclude [stepper]))
+  over time.")
 
-;; Forward declaration to resolve a circular dependency between step! and
+;; Forward declaration to resolve a circular dependency between next! and
 ;; consume-effects!.
-(declare step!)
+(declare next!)
 
 (defn with-effect
   "Takes a state object, effect fn and extra arguments to pass to the effect fn.
   The effect is registered in the meta of the state. Returns the new state with
-  the effect attached for later execution within step!.
+  the effect attached for later execution within next!.
 
   Ex: (-> state
           (with-effect post-comment comment))"
@@ -34,7 +33,7 @@
   and removes them when done. The effects are sequentially applied to the
   state.
 
-  The effect fn is applied with a partially applied step! fn it should call to
+  The effect fn is applied with a partially applied next! fn it should call to
   pass results on to further actions.
 
   Ex: (bonsai/consume-effects! state!)"
@@ -42,9 +41,9 @@
   (let [effects (-> state! deref meta ::effects)]
     (swap! state! without-effects)
     (doseq [[effect args] effects]
-      (apply effect (partial step! state!) args))))
+      (apply effect (partial next! state!) args))))
 
-(defn step!
+(defn next!
   "Takes a state atom containing your state, an action fn and any arguments you
   want to pass to the action. The action can attach effects with with-effect,
   the effects can use their first argument to dispatch further actions carrying
@@ -54,20 +53,9 @@
   should return the new state, using the -> threading macro is a good idea
   here.
 
-  Ex: (bonsai/step! state! add 10 20)"
+  Ex: (bonsai/next! state! add 10 20)"
   [state! action & args]
   (assert (fn? action)
-          (str "step! expects a function, got " (pr-str action)))
+          (str "next! expects a function, got " (pr-str action)))
   (apply swap! state! action args)
   (consume-effects! state!))
-
-(def stepper
-  "Partially applies step! with your arguments, if you pass the same arguments
-  twice, you will get the same function reference back. Useful for attaching to
-  Reagent event handlers.
-
-  Ex: [:button {:on-click (bonsai/stepper state! add 10 20)}]"
-  (memoize (fn [state! action & args]
-             (assert (fn? action)
-                     (str "stepper expects a function, got " (pr-str action)))
-             #(apply step! state! action args))))
