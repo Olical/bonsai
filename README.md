@@ -35,12 +35,12 @@ First add the current latest version of `olical/bonsai` (as indicated by the Clo
 
 ;; Define an effect that "calculates" Pi after a little while.
 ;; It passes the result onto the given action.
-;; Effects get given a partially applied "next!" fn to pass values onto further actions.
+;; Effects get given a partially applied "step!" fn to pass values onto further actions.
 ;; This is a Clojure example (Thread/sleep etc), but it works exactly the same in ClojureScript.
-(defn calc-pi [next! result-action]
+(defn calc-pi [step! result-action]
   (future                        ;; Drop into another thread.
     (Thread/sleep 1000)          ;; Wait for one second.
-    (next! result-action 3.14))) ;; Pass the result onto the result handler action.
+    (step! result-action 3.14))) ;; Pass the result onto the result handler action.
 
 ;; Define an action that can add things to :val.
 (defn add [state n]
@@ -57,7 +57,7 @@ First add the current latest version of `olical/bonsai` (as indicated by the Clo
 
 ;; Now let's apply some actions!
 ;; We do that by asking bonsai to advance the state! to the next state! using an action.
-(bonsai/next! state! add 5)
+(bonsai/step! state! add 5)
 
 ;; 5 was added to the state.
 (println @state!) ;; {:val 5}
@@ -65,7 +65,7 @@ First add the current latest version of `olical/bonsai` (as indicated by the Clo
 ;; Actions with effects will have their effects applied.
 ;; We can use calc-pi which gives pi to an action we specify.
 ;; In this case, we ask calc-pi to give pi to add.
-(bonsai/next! state! add-pi)
+(bonsai/step! state! add-pi)
 
 ;; Sleep until the effect is complete.
 (Thread/sleep 1500)
@@ -98,7 +98,7 @@ And here's a slightly more practical Reagent example that you can find within th
     [:div
      [:input {:type "text"
               :value text
-              :on-change #(bonsai/next! state! text-changed (-> % .-target .-value))}]
+              :on-change #(bonsai/step! state! text-changed (-> % .-target .-value))}]
      [:p (str/reverse text)]]))
 
 (defn root

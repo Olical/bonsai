@@ -1,19 +1,19 @@
 (ns bonsai.core
   "Minimalistic state management designed for Reagent and state that changes
   over time."
-  (:refer-clojure :exclude [next]))
+  (:refer-clojure :exclude [stepper]))
 
-;; Forward declaration to resolve a circular dependency between next! and
+;; Forward declaration to resolve a circular dependency between step! and
 ;; consume-effects!.
-(declare next!)
+(declare step!)
 
 (defn with-effect
   "Takes a state object, effect fn and extra arguments to pass to the effect fn.
   The effect is registered in the meta of the state. Returns the new state with
-  the effect attached for later execution within next!.
+  the effect attached for later execution within step!.
 
   Ex: (-> state
-          (with-effect some-eff some-arg-for-effect))"
+          (with-effect post-comment comment))"
   [state effect & args]
   (vary-meta state update ::effects conj [effect args]))
 
@@ -22,7 +22,7 @@
   without the effects meta data.
 
   Ex: (-> state
-          (with-effect some-eff)
+          (bonsai/with-effect post-comment)
           (without-effects))"
   [state]
   (vary-meta state dissoc ::effects))
@@ -32,17 +32,17 @@
   and removes them when done. The effects are sequentially applied to the
   state.
 
-  The effect fn is applied with a partially applied next! fn it should call to
+  The effect fn is applied with a partially applied step! fn it should call to
   pass results on to further actions.
 
-  Ex: (consume-effects! my-state-atom!)"
+  Ex: (bonsai/consume-effects! state!)"
   [state!]
   (let [effects (-> state! deref meta ::effects)]
     (swap! state! without-effects)
     (doseq [[effect args] effects]
-      (apply effect (partial next! state!) args))))
+      (apply effect (partial step! state!) args))))
 
-(defn next!
+(defn step!
   "Takes a state atom containing your state, an action fn and any arguments you
   want to pass to the action. The action can attach effects with with-effect,
   the effects can use their first argument to dispatch further actions carrying
@@ -52,16 +52,15 @@
   should return the new state, using the -> threading macro is a good idea
   here.
 
-  Ex: (next! my-state-atom! some-action :some-arg :another-arg)"
+  Ex: (bonsai/step! state! add 10 20)"
   [state! action & args]
   (apply swap! state! action args)
   (consume-effects! state!))
 
-(def next
-  "Exactly the same as next!, but it returns a function to be executed later
-  instead of applying the action immediately. It is memoized so that the same
-  arguments produce the same function reference, useful in Reagent event
-  handlers.
+(def stepper
+  "Partially applies step! with your arguments, if you pass the same arguments
+  twice, you will get the same function reference back. Useful for attaching to
+  Reagent event handlers.
 
-  Ex: [:button {:on-click (next my-state-atom! some-action :some-arg :another-arg)}]"
-  (memoize (fn [& args] #(apply next! args))))
+  Ex: [:button {:on-click (bonsai/stepper state! add 10 20)}]"
+  (memoize (fn [& args] #(apply step! args))))
