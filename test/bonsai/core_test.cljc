@@ -30,7 +30,10 @@
     (let [state (-> {}
                     (b/with-effect + 5)
                     (b/with-effect - 10))]
-      (t/is (= [[- [10]] [+ [5]]] (effects state))))))
+      (t/is (= [[- [10]] [+ [5]]] (effects state)))))
+  (t/testing "will throw on bad args"
+    (t/is (thrown-with-msg? AssertionError #"with-effect expects a function, got nil"
+                            (b/with-effect {} nil :foo)))))
 
 (t/deftest without-effects-test
   (t/testing "does nothing to nil effects"
@@ -54,7 +57,10 @@
   (t/testing "effects can be applied from actions"
     (let [state! (atom {})]
       (b/step! state! val-to-foo-eff)
-      (t/is (= {:val :foo} @state!)))))
+      (t/is (= {:val :foo} @state!))))
+  (t/testing "it warns you if you don't pass a function"
+    (t/is (thrown-with-msg? AssertionError #"step! expects a function, got nil"
+                            (b/step! (atom {}) nil)))))
 
 (t/deftest stepper-test
   (t/testing "creates a function that will apply the action to the state"
@@ -64,7 +70,10 @@
       (t/is (= (b/stepper state! val-to :foo)
                (b/stepper state! val-to :foo)))
       (t/is (not= (b/stepper state! val-to :foo)
-                  (b/stepper state! val-to :bar))))))
+                  (b/stepper state! val-to :bar)))))
+  (t/testing "it warns you if you don't pass a function"
+    (t/is (thrown-with-msg? AssertionError #"stepper expects a function, got nil"
+                            (b/stepper (atom {}) nil)))))
 
 (t/deftest consumer
   (t/testing "a consumer can define actions and effects that can be used in conjunction with each other"

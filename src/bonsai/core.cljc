@@ -15,6 +15,8 @@
   Ex: (-> state
           (with-effect post-comment comment))"
   [state effect & args]
+  (assert (fn? effect)
+          (str "with-effect expects a function, got " (pr-str effect)))
   (vary-meta state update ::effects conj [effect args]))
 
 (defn without-effects
@@ -54,6 +56,8 @@
 
   Ex: (bonsai/step! state! add 10 20)"
   [state! action & args]
+  (assert (fn? action)
+          (str "step! expects a function, got " (pr-str action)))
   (apply swap! state! action args)
   (consume-effects! state!))
 
@@ -63,4 +67,7 @@
   Reagent event handlers.
 
   Ex: [:button {:on-click (bonsai/stepper state! add 10 20)}]"
-  (memoize (fn [& args] #(apply step! args))))
+  (memoize (fn [state! action & args]
+             (assert (fn? action)
+                     (str "stepper expects a function, got " (pr-str action)))
+             #(apply step! state! action args))))
