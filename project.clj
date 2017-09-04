@@ -10,4 +10,6 @@
                         :compiler {:output-to "resources/public/js/testable.js"
                                    :main bonsai.test-runner
                                    :optimizations :none
-                                   :target :nodejs}}]})
+                                   :target :nodejs}}]}
+  :aliases {"test-cljs" ["doo" "node" "test" "once"]
+            "test-all" ["do" ["test"] ["test-cljs"]]})
