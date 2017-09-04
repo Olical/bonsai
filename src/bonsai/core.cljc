@@ -1,4 +1,6 @@
-(ns bonsai.core)
+(ns bonsai.core
+  "Minimalistic state management designed for Reagent and state that changes
+  over time.")
 
 ;; Forward declaration to resolve a circular dependency between next! and
 ;; consume-effects!.
