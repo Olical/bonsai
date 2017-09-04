@@ -2,13 +2,25 @@
 
 Minimalistic state management for Clojure and ClojureScript.
 
-Designed to work well with Reagent applications or anything that requires state that changes over time. Usually in response to some kind of user interaction.
+Designed to work well with [Reagent][] applications or anything that requires state changing over time. Usually in response to some kind of user interaction or asynchronous task.
 
-## Introduction
+## Rationale
 
-Bonsai essentially consists of normal Clojure(Script) functions, some sort of atom as well as `with-effect` and `next!` calls. You should check out the source and the tests to see how simple it is for yourself.
+When working with Reagent applications (or anything that requires state changing over time) you'll find yourself updating an atom in response to something happening. In JavaScript, you'd probably lean towards [Redux][], in ClojureScript you may lean towards [re-frame][].
 
-You can find an example UI project within the `example` directory, it's extremely simple but illustrates end to end usage.
+I quite like both of these systems, but I wanted something minimal that complimented Reagent (hence the similarities in description). I wrote a few functions to encapsulate the bare minimum of what I wanted to manage in an application and Bonsai fell out of that.
+
+The name is fairly obviously a reference to [Elm][], but this is a tiny tree that is deliberately kept small. Despite it's size, it resembles a larger version of itself. I feel like it's a good fit.
+
+So the "architecture", if you can call it that, consists of the following.
+
+ * An atom to store you state in. This can be a Reagent atom.
+ * Functions to map the state inside the atom onto the next state, called actions.
+ * Functions to perform asynchronous operations like hitting the network, called effects.
+ * A function to attach effects to the state inside an action for later execution.
+ * A function to apply arguments to the action and execute any effects.
+ 
+These five simple concepts yield quite a lot of power, as I hope you'll see.
 
 ## Usage
 
@@ -76,4 +88,8 @@ Find the full [unlicense][] in the `UNLICENSE` file, but here's a snippet.
 
 Do what you want. Learn as much as you can. Unlicense more software.
 
+[reagent]: https://reagent-project.github.io/
+[redux]: http://redux.js.org/docs/introduction/
+[re-frame]: https://github.com/Day8/re-frame
+[elm]: http://elm-lang.org/
 [unlicense]: http://unlicense.org/
