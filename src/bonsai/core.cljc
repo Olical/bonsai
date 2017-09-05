@@ -38,7 +38,7 @@
 
   Ex: (bonsai/consume-effects! state!)"
   [state!]
-  (let [effects (-> state! deref meta ::effects)]
+  (let [effects (-> @state! meta ::effects)]
     (swap! state! without-effects)
     (doseq [[effect args] effects]
       (apply effect (partial next! state!) args))))
