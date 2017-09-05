@@ -6,7 +6,7 @@ Designed to work well with [Reagent][] applications or anything that requires st
 
 ## Rationale
 
-When working with Reagent applications (or anything that requires state changing over time) you'll find yourself updating an atom in response to something happening. In JavaScript, you'd probably lean towards [Redux][], in ClojureScript you may lean towards [re-frame][reframe].
+When working with Reagent applications (or anything that requires state changing over time) you'll find yourself updating an atom in response to something happening. In JavaScript, you'd probably lean towards [Redux][], in ClojureScript you may lean towards [re-frame][].
 
 I quite like both of these systems, but I wanted something minimal that complimented Reagent (hence the similarities in description). I wrote a few functions to encapsulate the bare minimum of what I wanted to manage in an application and Bonsai fell out of that.
 
@@ -130,6 +130,6 @@ Do what you want. Learn as much as you can. Unlicense more software.
 [clojurescript]: https://clojurescript.org/
 [reagent]: https://reagent-project.github.io/
 [redux]: http://redux.js.org/docs/introduction/
-[reframe]: https://github.com/Day8/re-frame
+[re-frame]: https://github.com/Day8/re-frame
 [elm]: http://elm-lang.org/
 [unlicense]: http://unlicense.org/
