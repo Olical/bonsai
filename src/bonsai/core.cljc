@@ -1,6 +1,7 @@
 (ns bonsai.core "Minimalistic state management.")
 
-;; Forward declaration to resolve a circular dependency between next! and consume-effects!.
+;; Forward declaration to resolve a circular dependency between next! and
+;; consume-effects!.
 (declare next!)
 
 (defn with-effect
