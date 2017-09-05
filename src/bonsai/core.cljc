@@ -12,7 +12,7 @@
   the effect attached for later execution within next!.
 
   Ex: (-> state
-          (with-effect post-comment comment))"
+          (bonsai/with-effect post-comment comment))"
   [state effect & args]
   (assert (fn? effect)
           (str "with-effect expects a function, got " (pr-str effect)))
@@ -24,7 +24,7 @@
 
   Ex: (-> state
           (bonsai/with-effect post-comment)
-          (without-effects))"
+          (bonsai/without-effects))"
   [state]
   (vary-meta state dissoc ::effects))
 
