@@ -30,11 +30,7 @@
     (let [state (-> {}
                     (b/with-effect + 5)
                     (b/with-effect - 10))]
-      (t/is (= [[- [10]] [+ [5]]] (effects state)))))
-  (t/testing "will throw on bad args"
-    (t/is (thrown-with-msg? #?(:clj AssertionError
-                               :cljs js/Error) #"with-effect expects a function, got nil"
-                            (b/with-effect {} nil :foo)))))
+      (t/is (= [[- [10]] [+ [5]]] (effects state))))))
 
 (t/deftest without-effects-test
   (t/testing "does nothing to nil effects"
@@ -58,11 +54,7 @@
   (t/testing "effects can be applied from actions"
     (let [state! (atom {})]
       (b/next! state! val-to-foo-eff)
-      (t/is (= {:val :foo} @state!))))
-  (t/testing "it warns you if you don't pass a function"
-    (t/is (thrown-with-msg? #?(:clj AssertionError
-                               :cljs js/Error) #"next! expects a function, got nil"
-                            (b/next! (atom {}) nil)))))
+      (t/is (= {:val :foo} @state!)))))
 
 (t/deftest consumer
   (t/testing "a consumer can define actions and effects that can be used in conjunction with each other"

@@ -1,9 +1,6 @@
-(ns bonsai.core
-  "Minimalistic state management designed for Reagent and state that changes
-  over time.")
+(ns bonsai.core "Minimalistic state management.")
 
-;; Forward declaration to resolve a circular dependency between next! and
-;; consume-effects!.
+;; Forward declaration to resolve a circular dependency between next! and consume-effects!.
 (declare next!)
 
 (defn with-effect
@@ -14,8 +11,6 @@
   Ex: (-> state
           (with-effect post-comment comment))"
   [state effect & args]
-  (assert (fn? effect)
-          (str "with-effect expects a function, got " (pr-str effect)))
   (vary-meta state update ::effects conj [effect args]))
 
 (defn without-effects
@@ -55,7 +50,5 @@
 
   Ex: (bonsai/next! state! add 10 20)"
   [state! action & args]
-  (assert (fn? action)
-          (str "next! expects a function, got " (pr-str action)))
   (apply swap! state! action args)
   (consume-effects! state!))
