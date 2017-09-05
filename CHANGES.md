@@ -1,5 +1,10 @@
 # bonsai changes
 
+## v1.2.0
+
+ * Minor docstring changes.
+ * Removed assertions, they just added noise.
+
 ## v1.1.0
 
  * Various README and docstring improvements.
