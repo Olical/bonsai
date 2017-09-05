@@ -2,8 +2,8 @@
 
 ## v1.2.0
 
- * Minor docstring changes.
- * Removed assertions, they just added noise.
+ * Various README and docstring improvements.
+ * Removed function assertions, they just added noise.
 
 ## v1.1.0
 
