@@ -1,10 +1,35 @@
-# bonsai [![Build Status](https://travis-ci.org/Olical/bonsai.svg?branch=master)](https://travis-ci.org/Olical/bonsai) [![Clojars Project](https://img.shields.io/clojars/v/olical/bonsai.svg)](https://clojars.org/olical/bonsai)
+# Bonsai [![Build Status](https://travis-ci.org/Olical/bonsai.svg?branch=master)](https://travis-ci.org/Olical/bonsai) [![Clojars Project](https://img.shields.io/clojars/v/olical/bonsai.svg)](https://clojars.org/olical/bonsai)
 
 Minimal state management and rendering for [ClojureScript][].
 
 ## Example
 
-...
+This is just an outline of what I want it to be like.
+
+```clojure
+(defn inc-value [state]
+  (update state :value inc))
+
+(defn app [state]
+  [:p
+    {:on-click [inc-value]}
+    (:value state)])
+```
+
+```clojure
+(ns myapp.frontend
+  (:require [bonsai.dom :as dom]))
+  
+(dom/render [app] {:value 0}
+            (js/document.getElementById "app"))
+```
+
+```clojure
+(ns myapp.backend
+  (:require [bonsai.html :as html]))
+  
+(html/render [app] {:value 0})
+```
 
 ## Rationale
 
