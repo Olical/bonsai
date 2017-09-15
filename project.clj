@@ -1,5 +1,5 @@
-(defproject olical/bonsai "1.2.0"
-  :description "Minimalistic state management."
+(defproject olical/bonsai "2.0.0"
+  :description "Minimal state management and rendering for ClojureScript."
   :url "https://github.com/Olical/bonsai"
   :license {:name "Unlicense"
             :url "https://unlicense.org/"}
