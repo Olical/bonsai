@@ -1,4 +1,5 @@
 (ns bonsai.tree
+  "Tools to parse and diff valid Bonsai trees."
   (:require [clojure.spec.alpha :as s]
             [clojure.data :as data]))
 
@@ -20,12 +21,22 @@
 (s/fdef parse
         :args (s/cat :data ::tree)
         :ret ::parsed-tree)
-(defn parse [data]
+(defn parse
+  "Parse the given tree into a richer data structure using spec.
+
+  [:p {:id \"foo\"} \"hi\"] -> [:tag {:name :p
+                                      :attrs {:id \"foo\"}
+                                      :children [[:text \"hi\"]]}]"
+  [data]
   (s/conform ::tree data))
 
 (s/fdef changes
         :args (s/cat :old ::parsed-tree
                      :new ::parsed-tree)
         :ret ::tree-diff)
-(defn changes [old new]
+(defn changes
+  "Find the changes between two parsed trees using clojure.data/diff. Returns a
+  vector of three items. Things only in the old tree, things only in the new
+  tree and things in both."
+  [old new]
   (data/diff old new))
