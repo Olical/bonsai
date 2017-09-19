@@ -5,7 +5,8 @@
             :url "https://unlicense.org/"}
   :dependencies [[org.clojure/clojure "1.9.0-beta1"]
                  [org.clojure/clojurescript "1.9.908"]
-                 [org.clojure/spec.alpha "0.1.123"]]
+                 [org.clojure/spec.alpha "0.1.123"]
+                 [org.clojure/test.check "0.10.0-alpha2"]]
   :profiles {:dev {:plugins [[cider/cider-nrepl "0.15.1"]
                              [lein-doo "0.1.7"]]}}
   :cljsbuild {:builds [{:id "test"
