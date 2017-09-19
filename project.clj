@@ -3,8 +3,10 @@
   :url "https://github.com/Olical/bonsai"
   :license {:name "Unlicense"
             :url "https://unlicense.org/"}
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.908"]]
+  :dependencies [[org.clojure/clojure "1.9.0-beta1"]
+                 [org.clojure/clojurescript "1.9.908"]
+                 [org.clojure/spec.alpha "0.1.123"]
+                 [org.clojure/core.match "0.3.0-alpha5"]]
   :profiles {:dev {:plugins [[cider/cider-nrepl "0.15.1"]
                              [lein-doo "0.1.7"]]}}
   :cljsbuild {:builds [{:id "test"
