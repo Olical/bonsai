@@ -3,7 +3,7 @@
   :url "https://github.com/Olical/bonsai"
   :license {:name "Unlicense"
             :url "https://unlicense.org/"}
-  :dependencies [[org.clojure/clojure "1.9.0-beta1"]
+  :dependencies [[org.clojure/clojure "1.9.0-alpha19"]
                  [org.clojure/clojurescript "1.9.908"]
                  [org.clojure/spec.alpha "0.1.123"]
                  [org.clojure/test.check "0.10.0-alpha2"]]
