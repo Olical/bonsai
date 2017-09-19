@@ -23,3 +23,14 @@
                     :attrs {:foo "bar"}
                     :children [[:text "baz"]]}]
              (sut/parse [:p {:foo "bar"} "baz"])))))
+
+(t/deftest changes
+  (t/testing "changes are generated as expected"
+    (t/is (= [nil nil [:empty nil]]
+             (sut/changes (sut/parse nil) (sut/parse nil))))
+    (t/is (= [nil nil [:tag {:name :p :children [[:text "same"]]}]]
+             (sut/changes (sut/parse [:p "same"]) (sut/parse [:p "same"]))))
+    (t/is (= [[nil {:children [[nil "hi"]]}]
+              [nil {:children [[nil "no"]]}]
+              [:tag {:children [[:text]], :name :p}]]
+             (sut/changes (sut/parse [:p "hi"]) (sut/parse [:p "no"]))))))
