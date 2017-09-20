@@ -12,7 +12,7 @@
                     :tag ::tag
                     :seq (s/coll-of ::tree :kind sequential?)))
 
-(s/def ::parsed-tree vector?)
+(s/def ::parsed-tree (s/tuple keyword? any?))
 
 (s/def ::tree-diff (s/cat :a vector?
                           :b vector?

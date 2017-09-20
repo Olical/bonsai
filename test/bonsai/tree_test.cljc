@@ -32,5 +32,5 @@
              (sut/changes (sut/parse [:p "same"]) (sut/parse [:p "same"]))))
     (t/is (= [[nil {:children [[nil "hi"]]}]
               [nil {:children [[nil "no"]]}]
-              [:tag {:children [[:text]], :name :p}]]
+              [:tag {:name :p :children [[:text]]}]]
              (sut/changes (sut/parse [:p "hi"]) (sut/parse [:p "no"]))))))
