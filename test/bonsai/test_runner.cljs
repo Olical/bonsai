@@ -1,7 +1,5 @@
 (ns bonsai.test-runner
   (:require [doo.runner :refer-macros [doo-tests]]
-            [bonsai.tree-test]
-            [bonsai.html-test]))
+            [bonsai.dom-test]))
 
-(doo-tests 'bonsai.tree-test
-           'bonsai.html-test)
+(doo-tests 'bonsai.dom-test)

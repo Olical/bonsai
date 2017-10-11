@@ -9,3 +9,5 @@ pom.xml.asc
 /.nrepl-port
 out/
 resources/
+node_modules/
+.cljs_node_repl/
