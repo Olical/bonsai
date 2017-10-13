@@ -18,7 +18,24 @@
       (.appendChild child text)
       (t/is (= "<p>Hello, World!</p>" (.-innerHTML mount))))))
 
-(comment
-  (t/run-tests 'bonsai.dom-test)
-  ;; Using this from the REPL.
-  )
+(t/deftest simple-dom
+  (t/testing "nothing to nothing is nothing"
+    (let [mount (build-mount)]
+      (sut/render! mount nil nil)
+      (t/is (= "" (.-innerHTML mount)))))
+  (t/testing "adding and removing a tag"
+    (let [mount (build-mount)]
+      (sut/render! mount nil [:p "Hi, Bonsai!"])
+      (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))
+      (sut/render! mount [:p "Hi, Bonsai!"] nil)
+      (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))))
+
+  (t/testing "changing a nested node"
+    (let [mount (build-mount)]
+      (sut/render! mount nil [:p "Hi, Bonsai!"])
+      (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))
+      (sut/render! mount [:p "Hi, Bonsai!"] [:p "Oh, Hi!"])
+      (t/is (= "<p>Oh, Hi!</p>" (.-innerHTML mount))))))
+
+(t/run-tests 'bonsai.dom-test)
+
