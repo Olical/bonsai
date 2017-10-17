@@ -45,7 +45,6 @@
   If we encounter something that's in 'to' but isn't in 'from', it's added. If
   something is missing from 'to' but is in 'from', we remove it."
   [root from to]
-  (println "------ render ------")
   (loop [dz (dom-zipper root)
          fz (tree-zipper from)
          tz (tree-zipper to)]
@@ -54,11 +53,7 @@
       (let [dn (zip/node dz)
             fn (zip/node fz)
             tn (zip/node tz)]
-        (cond
-          (= tn fn) (println "=" tn)
-          (and (seq tn) (nil? fn)) (println "+" tn)
-          (and (seq fn) (nil? tn)) (println "-" fn)
-          :else (println "~" tn))
+        (prn (.-outerHTML dn) fn tn)
         (recur (zip/next dz)
                (zip/next fz)
                (zip/next tz))))))
