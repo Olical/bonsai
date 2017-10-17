@@ -1,10 +1,19 @@
 # Bonsai [![Build Status](https://travis-ci.org/Olical/bonsai.svg?branch=master)](https://travis-ci.org/Olical/bonsai) [![Clojars Project](https://img.shields.io/clojars/v/olical/bonsai.svg)](https://clojars.org/olical/bonsai)
 
-Minimal state management and rendering for [ClojureScript][].
+Declarative DOM rendering with integrated state management for [ClojureScript][].
 
-## Example
+## To do
 
-This is just an outline of what I want it to be like.
+ * [ ] `bonsai.tree` - Tools to work with hiccup like trees. Mostly just to generate change sets between them.
+ * [ ] `bonsai.dom` - Mount and render trees into the DOM using `bonsai.tree` for change detection.
+ * [ ] `bonsai.html` - Render a tree to HTML. The ClojureScript should be able to continue where the Clojure left off through hydration.
+ * [ ] Full documentation of all public functions including examples.
+ * [ ] Implement my tiny todo app with this instead of Reagent.
+ * [ ] Implement another Game of Life using this instead of re-frame.
+
+## Potential usage
+
+This is just an outline of what I want usage to be like.
 
 ```clojure
 (defn inc-value [state]
@@ -33,7 +42,7 @@ This is just an outline of what I want it to be like.
 
 ## Rationale
 
-...
+I'll write this up when I'm done, maybe as a blog post.
 
 ## Inspiration
 
