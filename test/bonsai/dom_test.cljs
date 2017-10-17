@@ -18,11 +18,12 @@
       (.appendChild child text)
       (t/is (= "<p>Hello, World!</p>" (.-innerHTML mount))))))
 
-(t/deftest simple-dom
+(t/deftest dom
   (t/testing "nothing to nothing is nothing"
     (let [mount (build-mount)]
       (sut/render! mount nil nil)
       (t/is (= "" (.-innerHTML mount)))))
+
   (t/testing "adding and removing a tag"
     (let [mount (build-mount)]
       (sut/render! mount nil [:p "Hi, Bonsai!"])
