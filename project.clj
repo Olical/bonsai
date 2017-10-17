@@ -5,7 +5,8 @@
             :url "https://unlicense.org/"}
   :dependencies [[org.clojure/clojure "1.9.0-beta2"]
                  [org.clojure/clojurescript "1.9.946"]]
-  :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.2.2"]]
+  :profiles {:dev {:source-paths ["src" "dev"]
+                   :dependencies [[com.cemerick/piggieback "0.2.2"]]
                    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
                    :plugins [[cider/cider-nrepl "0.15.1"]
                              [lein-doo "0.1.7"]]}}

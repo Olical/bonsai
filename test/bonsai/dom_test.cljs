@@ -38,4 +38,3 @@
       (t/is (= "<p>Oh, Hi!</p>" (.-innerHTML mount))))))
 
 (t/run-tests 'bonsai.dom-test)
-
