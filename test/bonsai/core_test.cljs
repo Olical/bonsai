@@ -1,11 +1,10 @@
 (ns bonsai.core-test
   (:require [cljs.test :as t :include-macros true]
+            [orchestra-cljs.spec.test :as st]
             [bonsai.core :as sut]
             [jsdom]))
 
-(defn build-mount
-  "Builds a fresh jsdom and pulls out the body for you to mount into."
-  []
+(defn build-mount []
   (-> (new jsdom/JSDOM)
       (-> .-window .-document .-body)))
 
@@ -38,4 +37,5 @@
       (sut/render mount [:p "Hi, Bonsai!"] [:p "Oh, Hi!"])
       (t/is (= "<p>Oh, Hi!</p>" (.-innerHTML mount))))))
 
+(st/instrument)
 (t/run-tests 'bonsai.core-test)
