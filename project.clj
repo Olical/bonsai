@@ -16,6 +16,6 @@
                                    :main bonsai.test-runner
                                    :optimizations :none
                                    :npm-deps {:jsdom "11.3.0"}
-                                   :install-deps false
+                                   :install-deps true
                                    :target :nodejs}}]}
   :aliases {"test" ["doo" "node" "test" "once"]})

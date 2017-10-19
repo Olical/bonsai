@@ -1,10 +1,6 @@
 {
-  "name": "bonsai",
-  "version": "0.0.0",
-  "repository": "git@github.com:Olical/bonsai.git",
-  "author": "Oliver Caldwell <olliec87@gmail.com>",
-  "license": "Unlicense",
   "dependencies": {
+    "@cljs-oss/module-deps": "^1.1.1",
     "jsdom": "^11.3.0"
   }
 }
