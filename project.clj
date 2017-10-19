@@ -12,11 +12,10 @@
                              [lein-doo "0.1.7"]]}}
   :cljsbuild {:builds [{:id "test"
                         :source-paths ["src" "test"]
-                        :compiler {:output-to "resources/public/js/testable.js"
+                        :compiler {:output-to "out/builds/tests.js"
                                    :main bonsai.test-runner
                                    :optimizations :none
                                    :npm-deps {:jsdom "11.3.0"}
-                                   :install-deps true
+                                   :install-deps false
                                    :target :nodejs}}]}
-  :aliases {"test-cljs" ["doo" "node" "test" "once"]
-            "test-all" ["do" ["test"] ["test-cljs"]]})
+  :aliases {"test" ["doo" "node" "test" "once"]})

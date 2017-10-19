@@ -1,1 +1,10 @@
-{}
+{
+  "name": "bonsai",
+  "version": "0.0.0",
+  "repository": "git@github.com:Olical/bonsai.git",
+  "author": "Oliver Caldwell <olliec87@gmail.com>",
+  "license": "Unlicense",
+  "dependencies": {
+    "jsdom": "^11.3.0"
+  }
+}
