@@ -26,7 +26,13 @@
 (defn replace-node [node vnode]
   (.replaceChild (.-parentNode node) (build-node (doc node) vnode) node))
 
+(defn children [vnode]
+  (cond
+    (vector? vnode) (rest vnode)
+    :else nil))
+
 (defn render [mount old new]
+  (prn "trace" mount old new)
   (let [co (comparable old)
         cn (comparable new)]
     (when (and co (not cn))
@@ -34,4 +40,6 @@
     (when (and (not co) cn)
       (add-node mount new))
     (when (and co cn (not= co cn))
-      (replace-node node cn))))
+      (replace-node mount cn)))
+  (let [child-nodes (array-seq (.-childNodes mount))]
+    (doall (map render child-nodes (children old) (children new)))))

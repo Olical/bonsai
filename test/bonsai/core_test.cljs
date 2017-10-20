@@ -8,6 +8,9 @@
   (-> (new jsdom/JSDOM)
       (-> .-window .-document .-body)))
 
+(array-seq (.-childNodes (doto (build-mount)
+                           (aset "innerHTML" "<p>a</p><p>b</p>"))))
+
 (t/deftest canary
   (t/testing "verifies that the tools I'm using to test are working"
     (let [mount (build-mount)
