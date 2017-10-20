@@ -1,14 +1,37 @@
 (ns bonsai.core
   (:require [cljs.spec.alpha :as s]))
 
-(defn dom? [e]
-  (and e (string? (.-nodeName e))))
+(defn comparable [vnode]
+  (cond
+    (string? vnode) vnode
+    (nil? vnode) vnode
+    (vector? vnode) (first vnode)
+    :else (js/console.error "Could not get comparable from" vnode)))
 
-(s/def ::node vector?)
+(defn doc [node]
+  (.-ownerDocument node))
 
-(s/fdef render
-        :args (s/cat :mount dom?
-                     :old ::node
-                     :new ::node))
+(defn build-node [doc vnode]
+  (cond
+    (string? vnode) (.createTextNode doc vnode)
+    (vector? vnode) (.createElement doc (name (first vnode)))
+    :else (js/console.error "Could not build node from" vnode)))
 
-(defn render [])
+(defn remove-node [node]
+  (.removeChild (.-parentNode node) node))
+
+(defn add-node [node vnode]
+  (.appendChild node (build-node (doc node) vnode)))
+
+(defn replace-node [node vnode]
+  (.replaceChild (.-parentNode node) (build-node (doc node) vnode) node))
+
+(defn render [mount old new]
+  (let [co (comparable old)
+        cn (comparable new)]
+    (when (and co (not cn))
+      (remove-node mount))
+    (when (and (not co) cn)
+      (add-node mount new))
+    (when (and co cn (not= co cn))
+      (replace-node node cn))))
