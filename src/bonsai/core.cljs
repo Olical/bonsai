@@ -1,45 +1,32 @@
 (ns bonsai.core
-  (:require [cljs.spec.alpha :as s]))
+  (:require [cljs.spec.alpha :as s]
+            [expound.alpha :as expound]))
 
-(defn comparable [vnode]
-  (cond
-    (string? vnode) vnode
-    (nil? vnode) vnode
-    (vector? vnode) (first vnode)
-    :else (js/console.error "Could not get comparable from" vnode)))
+(s/def ::tree (s/or :nothing nil?
+                    :text string?
+                    :nodes (s/coll-of ::tree)
+                    :node (s/cat :name keyword?
+                                 :children (s/* ::tree))))
 
-(defn doc [node]
-  (.-ownerDocument node))
+(defn parse [source]
+  (let [result (s/conform ::tree source)]
+    (if (s/invalid? result)
+      (throw (js/Error. (expound/expound-str ::tree source)))
+      (if (= (first result) :nodes)
+        (second result)
+        [result]))))
 
-(defn build-node [doc vnode]
-  (cond
-    (string? vnode) (.createTextNode doc vnode)
-    (vector? vnode) (.createElement doc (name (first vnode)))
-    :else (js/console.error "Could not build node from" vnode)))
+(defn render [mount {:keys [old new]}]
+  (loop [old-nodes (parse old)
+         new-nodes (parse new)]
+    (when (not= old-nodes new-nodes)
+      (doseq [[idx [new-type new-value]] (map-indexed vector new-nodes)]
+        (let [[old-type old-value] (nth old-nodes idx)]
+          (case new-type
+            :nothing (prn "DOING NOTHING" new-value)
+            :text (prn "HANDLING TEXT" new-value)
+            :nodes (prn "HIT A SEQ OF NODES" new-value)
+            :node (prn "HIT A NODE" new-value)))))))
 
-(defn remove-node [node]
-  (.removeChild (.-parentNode node) node))
-
-(defn add-node [node vnode]
-  (.appendChild node (build-node (doc node) vnode)))
-
-(defn replace-node [node vnode]
-  (.replaceChild (.-parentNode node) (build-node (doc node) vnode) node))
-
-(defn children [vnode]
-  (cond
-    (vector? vnode) (rest vnode)
-    :else nil))
-
-(defn render [mount old new]
-  (prn "trace" mount old new)
-  (let [co (comparable old)
-        cn (comparable new)]
-    (when (and co (not cn))
-      (remove-node mount))
-    (when (and (not co) cn)
-      (add-node mount new))
-    (when (and co cn (not= co cn))
-      (replace-node mount cn)))
-  (let [child-nodes (array-seq (.-childNodes mount))]
-    (doall (map render child-nodes (children old) (children new)))))
+;; So I should be able to handle the top level with this.
+;; To handle children and seqs of nodes, I'll need to concat and recur + attach some DOM node.
