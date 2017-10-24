@@ -1,4 +1,4 @@
-(ns bonsai.core
+(ns bonsai.dom
   (:require [cljs.spec.alpha :as s]
             [expound.alpha :as expound]))
 

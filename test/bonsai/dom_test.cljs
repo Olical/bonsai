@@ -1,6 +1,6 @@
-(ns bonsai.core-test
+(ns bonsai.dom-test
   (:require [cljs.test :as t :include-macros true]
-            [bonsai.core :as sut]
+            [bonsai.dom :as sut]
             [jsdom]))
 
 (defn build-mount []
@@ -41,4 +41,4 @@
                          :new [:p "Oh, Hi!"]})
       (t/is (= "<p>Oh, Hi!</p>" (.-innerHTML mount))))))
 
-(t/run-tests 'bonsai.core-test)
+(t/run-tests 'bonsai.dom-test)
