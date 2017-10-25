@@ -4,7 +4,6 @@
 
 (s/def ::tree (s/or :nothing nil?
                     :text string?
-                    :nodes (s/coll-of ::tree)
                     :node (s/cat :name keyword?
                                  :children (s/* ::tree))))
 
@@ -12,15 +11,19 @@
   (let [result (s/conform ::tree source)]
     (if (s/invalid? result)
       (throw (js/Error. (expound/expound-str ::tree source)))
-      [(if (= (first result) :nodes)
-         (second result)
-         [result])])))
+      (list (list result)))))
 
 (defn parent [nodes]
   (-> nodes meta :parent))
 
 (defn sync-node [parent old new idx]
-  (prn old new idx))
+  (prn "SYNC" old new idx))
+
+(defn children [nodes]
+  (into []
+        (comp (filter (fn [[type value]] (= type :node)))
+              (map (fn [[type value]] (:children value))))
+        nodes))
 
 (defn render [old-stack new-source mount]
   (loop [old-stack old-stack
@@ -32,9 +35,11 @@
             [new-nodes & new-rest] new-stack
             parent-dom (or (parent old-nodes) mount)]
         (doall (map (partial sync-node parent-dom) old-nodes new-nodes (range)))
-        (recur old-rest
-               new-rest
-               (conj acc (with-meta new-nodes {:parent parent-dom})))))))
+        (prn "oh" (concat (children new-nodes) new-rest))
+        #_(recur old-rest
+                 (concat (children new-nodes parent-dom) new-rest)
+                 (conj acc (with-meta new-nodes {:parent parent-dom})))))))
 
-(-> (render nil [:p "hi"] :dom)
-    (render [:p "bye"] :dom))
+(comment
+  (-> (render nil [:p "hi"] :dom)
+      (render [:p "bye"] :dom)))
