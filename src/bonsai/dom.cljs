@@ -25,7 +25,7 @@
               (map (fn [[type value]] (:children value))))
         nodes))
 
-(defn render [old-stack new-source mount]
+(defn render! [old-stack new-source mount]
   (loop [old-stack old-stack
          new-stack (start-stack new-source)
          acc []]
@@ -36,10 +36,10 @@
             parent-dom (or (parent old-nodes) mount)]
         (doall (map (partial sync-node parent-dom) old-nodes new-nodes (range)))
         (prn "oh" (concat (children new-nodes) new-rest))
-        #_(recur old-rest
-                 (concat (children new-nodes parent-dom) new-rest)
-                 (conj acc (with-meta new-nodes {:parent parent-dom})))))))
+        (recur old-rest
+               (concat (children new-nodes parent-dom) new-rest)
+               (conj acc (with-meta new-nodes {:parent parent-dom})))))))
 
 (comment
-  (-> (render nil [:p "hi"] :dom)
-      (render [:p "bye"] :dom)))
+  (-> (render! nil [:p "hi"] :dom)
+      (render! [:p "bye"] :dom)))

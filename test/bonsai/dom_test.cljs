@@ -16,29 +16,24 @@
       (.appendChild child text)
       (t/is (= "<p>Hello, World!</p>" (.-innerHTML mount))))))
 
-(t/deftest render
+(t/deftest render!
   (t/testing "nothing to nothing is nothing"
     (let [mount (build-mount)]
-      (sut/render mount {:old nil
-                         :new nil})
+      (sut/render! nil nil mount)
       (t/is (= "" (.-innerHTML mount)))))
 
   (t/testing "adding and removing a tag"
-    (let [mount (build-mount)]
-      (sut/render mount {:old nil
-                         :new [:p "Hi, Bonsai!"]})
+    (let [mount (build-mount)
+          prev (sut/render! nil [:p "Hi, Bonsai!"] mount)]
       (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))
-      (sut/render mount {:old [:p "Hi, Bonsai!"]
-                         :new nil})
+      (sut/render! prev [:p "Hi, Bonsai!"] mount)
       (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))))
 
   (t/testing "changing a nested node"
-    (let [mount (build-mount)]
-      (sut/render mount {:old nil
-                         :new [:p "Hi, Bonsai!"]})
+    (let [mount (build-mount)
+          prev (sut/render! nil [:p "Hi, Bonsai!"] mount)]
       (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))
-      (sut/render mount {:old [:p "Hi, Bonsai!"]
-                         :new [:p "Oh, Hi!"]})
+      (sut/render! prev [:p "Oh, Hi!"] mount)
       (t/is (= "<p>Oh, Hi!</p>" (.-innerHTML mount))))))
 
 (t/run-tests 'bonsai.dom-test)
