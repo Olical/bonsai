@@ -27,7 +27,7 @@
           prev (sut/render! nil [:p "Hi, Bonsai!"] mount)]
       (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))
       (sut/render! prev nil mount)
-      (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))))
+      (t/is (= "" (.-innerHTML mount)))))
 
   (t/testing "changing a nested node"
     (let [mount (build-mount)

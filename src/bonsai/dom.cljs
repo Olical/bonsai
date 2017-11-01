@@ -2,42 +2,42 @@
   (:require [cljs.spec.alpha :as s]
             [expound.alpha :as expound]))
 
-(s/def ::tree (s/or :nothing nil?
-                    :text string?
-                    :node (s/cat :name keyword?
-                                 :children (s/* ::tree))))
+(s/def ::tree (s/nilable
+               (s/or :text string?
+                     :node (s/cat :name keyword?
+                                  :children (s/* ::tree)))))
 
-(defn start-stack [source]
-  (let [result (s/conform ::tree source)]
-    (if (s/invalid? result)
-      (throw (js/Error. (expound/expound-str ::tree source)))
-      (list [result]))))
+(defn build-tree [src]
+  (let [tree (s/conform ::tree src)]
+    (if (s/invalid? tree)
+      (throw (js/Error. (expound/expound-str ::tree src)))
+      tree)))
 
-(defn parent [nodes]
-  (-> nodes meta :parent))
+(defn append-child! [host-node node]
+  (.appendChild host-node node))
 
-(defn sync-node! [parent old new idx]
+(defn remove-child! [host-node node]
+  (.removeChild host-node node))
+
+(defn build-node [document [type value]]
   (cond
-    (and (not old) new) (prn "+" new)
-    (and old (not new)) (prn "-" old)
-    (and old new) (prn "~" old "->" new)))
+    (= type :text) (.createTextNode document value)
+    (= type :node) (let [node (.createElement document (name (:name value)))]
+                     (doseq [child (:children value)]
+                       (append-child! node (build-node document child)))
+                     node)))
 
-(defn render! [old-stack new-source mount]
-  (loop [old-stack old-stack
-         new-stack (start-stack new-source)
-         acc []]
-    (if (and (nil? old-stack) (nil? new-stack))
-      acc
-      (let [[old-nodes & old-rest] old-stack
-            [new-nodes & new-rest] new-stack
-            parent-dom (or (parent old-nodes) mount)]
-        (doall (map (partial sync-node! parent-dom) old-nodes new-nodes (range)))
-        (recur old-rest
-               new-rest
-               (conj acc new-nodes))))))
+(defn first-child [node]
+  (.-firstChild node))
 
-#_(defn children [nodes]
-    (into []
-          (comp (filter (fn [[type value]] (= type :node)))
-                (map (fn [[type value]] (:children value))))
-          nodes))
+(defn document [node]
+  (.-ownerDocument node))
+
+(defn render! [prev-tree next-src host-node]
+  (let [next-tree (build-tree next-src)
+        host-document (document host-node)]
+    (cond
+      (and (nil? prev-tree) next-tree) (append-child! host-node (build-node host-document next-tree))
+      (and prev-tree (nil? next-tree)) (remove-child! host-node (first-child host-node))
+      (not= prev-tree next-tree) (prn "~" prev-tree "->" next-tree))
+    next-tree))
