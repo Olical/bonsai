@@ -7,56 +7,82 @@
                      :node (s/cat :name keyword?
                                   :children (s/* ::tree)))))
 
-(defn append-child! [host-node node]
-  (.appendChild host-node node))
-
-(defn remove-child! [host-node node]
-  (.removeChild host-node node))
-
-(defn first-child [node]
-  (.-firstChild node))
-
-(defn document [node]
-  (.-ownerDocument node))
-
-(defn build-node [document [type value]]
-  (cond
-    (= type :text) (.createTextNode document value)
-    (= type :node) (let [node (.createElement document (name (:name value)))]
-                     (doseq [child (:children value)]
-                       (append-child! node (build-node document child)))
-                     node)))
-
-(defn build-tree [src]
+(defn conform-tree [src]
   (let [tree (s/conform ::tree src)]
     (if (s/invalid? tree)
       (throw (js/Error. (expound/expound-str ::tree src)))
       tree)))
 
-(defn tree-type [[type value]]
-  (cond
-    (= type :text) [:text :text]
-    (= type :node) [:node (:name value)]))
+(defn tree->el [document [type value :as tree]]
+  (case type
+    :text (.createTextNode document value)
+    :node (.createElement document (name (:name value)))))
 
-(defn tree-children [[_ {:keys [children]}]]
-  children)
+(defn document [el]
+  (.-ownerDocument el))
 
-(defn render! [prev-tree next-tree host-node]
-  (let [host-document (document host-node)]
-    (cond
-      (= prev-tree next-tree) :noop
-      (and (nil? prev-tree) next-tree) (append-child! host-node (build-node host-document next-tree))
-      (and prev-tree (nil? next-tree)) (remove-child! host-node (first-child host-node))
-      (not= (tree-type prev-tree) (tree-type next-tree)) (do (remove-child! host-node (first-child host-node))
-                                                             (append-child! host-node (build-node host-document next-tree))))
-    (let [prev-children (tree-children prev-tree)
-          next-children (tree-children next-tree)]
-      (doall
-       (map
-        (fn [next-child idx]
-          (prn next-child)
-          (render! (get prev-children idx) next-child (first-child host-node)))
-        next-children (range))))
-    next-tree))
+(defn remove! [el]
+  (.removeChild (.-parentNode el) el))
 
-(tree-children [:text "hi"])
+(defn append! [host tree]
+  (let [el (tree->el (document host) tree)]
+    (.appendChild host el)))
+
+(defn migrate! [old [type value :as tree]]
+  (if (= type :text)
+    (aset old "nodeValue" value)
+    (let [el (tree->el (document old) tree)
+          host (.-parentNode old)]
+      (.replaceChild host el old)
+      (doseq [child (array-seq (.-children old))]
+        (.appendChild el child)))))
+
+(defn first-child [el]
+  (.-firstChild el))
+
+(defn next-child [el]
+  (when el
+    (.-nextChild el)))
+
+(defn last-child [el]
+  (.-lastChild el))
+
+(defn kind [[type value]]
+  (case type
+    :text [:text value]
+    :node [:node (:children value)]
+    nil nil))
+
+(defn node-children [[type value :as tree]]
+  (case type
+    :text nil
+    :node (:children value)
+    nil nil))
+
+(defn ensure-vec [tree]
+  (if (keyword? (first tree))
+    [tree]
+    tree))
+
+(defn render-recur! [pvs nxs host]
+  (loop [pvs pvs
+         nxs nxs
+         el (first-child host)]
+    (let [pv (first pvs)
+          nx (first nxs)]
+      (when (or pv nx)
+        (cond
+          (= pv nx) nil
+          (and pv (nil? nx)) (remove! el)
+          (and (nil? pv) nx) (append! host nx)
+          (not= (kind pv) (kind nx)) (migrate! el nx))
+        (let [pc (node-children pv)
+              nc (node-children nx)]
+          (when (not= pc nc)
+            (render-recur! pc nc (or el (last-child host)))))
+        (recur (rest pvs) (rest nxs) (or (next-child el) (last-child host)))))))
+
+(defn render! [pv nx-src host]
+  (let [nx (conform-tree nx-src)]
+    (render-recur! (ensure-vec pv) (ensure-vec nx) host)
+    nx))
