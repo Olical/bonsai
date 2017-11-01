@@ -24,16 +24,16 @@
 
   (t/testing "adding and removing a tag"
     (let [mount (build-mount)
-          prev (sut/render! nil [:p "Hi, Bonsai!"] mount)]
+          prev (sut/render! nil (sut/build-tree [:p "Hi, Bonsai!"]) mount)]
       (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))
       (sut/render! prev nil mount)
       (t/is (= "" (.-innerHTML mount)))))
 
   (t/testing "changing a nested node"
     (let [mount (build-mount)
-          prev (sut/render! nil [:p "Hi, Bonsai!"] mount)]
+          prev (sut/render! nil (sut/build-tree [:p "Hi, Bonsai!"]) mount)]
       (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))
-      (sut/render! prev [:p "Oh, Hi!"] mount)
+      (sut/render! prev (sut/build-tree [:p "Oh, Hi!"]) mount)
       (t/is (= "<p>Oh, Hi!</p>" (.-innerHTML mount))))))
 
 (t/run-tests 'bonsai.dom-test)
