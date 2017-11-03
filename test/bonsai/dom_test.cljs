@@ -34,6 +34,15 @@
           prev (sut/render! [:p "Hi, Bonsai!"] mount)]
       (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))
       (sut/render! prev [:p "Oh, Hi!"] mount)
-      (t/is (= "<p>Oh, Hi!</p>" (.-innerHTML mount))))))
+      (t/is (= "<p>Oh, Hi!</p>" (.-innerHTML mount)))))
+
+  (t/testing "more complex nesting with tag type changes"
+    (let [mount (build-mount)
+          prev (sut/render! [:ul [:li "Hello, " [:span "World!"]] [:li "Complex " "enough?"]] mount)]
+      (t/is (= "<ul><li>Hello, <span>World!</span></li><li>Complex enough?</li></ul>" (.-innerHTML mount)))
+      (let [prev (sut/render! prev [:ul [:li "Hello, " [:span "Bonsai!"]] [:li "Hard " "enough?"]] mount)]
+        (t/is (= "<ul><li>Hello, <span>Bonsai!</span></li><li>Hard enough?</li></ul>" (.-innerHTML mount)))
+        (sut/render! prev [:ol [:li "Hello, " [:span "Bonsai!"]] [:li "Hard " "enough?"]] mount)
+        (t/is (= "<ol><li>Hello, <span>Bonsai!</span></li><li>Hard enough?</li></ol>" (.-innerHTML mount)))))))
 
 (t/run-tests 'bonsai.dom-test)

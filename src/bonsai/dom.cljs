@@ -45,7 +45,7 @@
     (let [el (tree->el (document old) tree)
           host (.-parentNode old)]
       (.replaceChild host el old)
-      (doseq [child (array-seq (.-children old))]
+      (doseq [child (into [] (array-seq (.-children old)))]
         (.appendChild el child))
       el)))
 
@@ -76,13 +76,13 @@
         (let [next-el (cond
                         (= pv nx) (next-sibling el)
                         (and pv (nil? nx)) (remove! el)
-                        (and (nil? pv) nx) (append! host nx)
-                        (not= (fingerprint pv) (fingerprint nx)) (migrate! el nx))
+                        (and (nil? pv) nx) (next-sibling (append! host nx))
+                        (not= (fingerprint pv) (fingerprint nx)) (next-sibling (migrate! el nx)))
               pc (node-children pv)
               nc (node-children nx)]
           (when (and (or pc nc) (not= pc nc))
             (render-recur! pc nc (or el (last-child host))))
-          (recur (rest pvs) (rest nxs) (or next-el (last-child host))))))))
+          (recur (rest pvs) (rest nxs) next-el))))))
 
 (defn render!
   ([nx-src host]
