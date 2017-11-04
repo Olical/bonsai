@@ -21,33 +21,27 @@
 (defn document [el]
   (.-ownerDocument el))
 
-(defn next-sibling [el]
-  (.-nextSibling el))
-
-(defn first-child [el]
-  (.-firstChild el))
-
-(defn last-child [el]
-  (.-lastChild el))
-
-(defn remove! [el]
-  (let [next-el (next-sibling el)]
-    (.removeChild (.-parentNode el) el)
-    next-el))
+(defn remove! [host el]
+  (.removeChild host el))
 
 (defn append! [host tree]
   (let [el (tree->el (document host) tree)]
     (.appendChild host el)))
 
-(defn migrate! [old [prev-type _] [type value :as tree]]
-  (if  (= prev-type type :text)
-    (do (aset old "nodeValue" value) old)
-    (let [el (tree->el (document old) tree)
-          host (.-parentNode old)]
+(defn children [el]
+  (when el
+    (into [] (array-seq (aget el "childNodes")))))
+
+(defn migrate! [host old [prev-type _] [type value :as tree]]
+  (if (= prev-type type :text)
+    (aset old "nodeValue" value)
+    (let [el (tree->el (document old) tree)]
       (.replaceChild host el old)
-      (doseq [child (when-let [children (aget old "children")] (into [] (array-seq children)))]
-        (.appendChild el child))
-      el)))
+      (doseq [child (children old)]
+        (.appendChild el child)))))
+
+(defn nth-child [el n]
+  (nth (children el) n nil))
 
 (defn fingerprint [[type value]]
   (case type
@@ -64,20 +58,21 @@
 (defn render-recur! [pvs nxs host]
   (loop [pvs pvs
          nxs nxs
-         el (first-child host)]
+         n 0]
     (let [pv (first pvs)
-          nx (first nxs)]
+          nx (first nxs)
+          el (nth-child host n)]
       (when (or pv nx)
-        (let [next-el (cond
-                        (= pv nx) (next-sibling el)
-                        (and pv (nil? nx)) (remove! el)
-                        (and (nil? pv) nx) (next-sibling (append! host nx))
-                        (not= (fingerprint pv) (fingerprint nx)) (next-sibling (migrate! el pv nx)))
-              pc (node-children pv)
+        (cond
+          (= pv nx) nil
+          (and pv (nil? nx)) (remove! host el)
+          (and (nil? pv) nx) (append! host nx)
+          (not= (fingerprint pv) (fingerprint nx)) (migrate! host el pv nx))
+        (let [pc (node-children pv)
               nc (node-children nx)]
-          (when (and (or pc nc) (not= pc nc))
-            (render-recur! pc nc (or el (last-child host))))
-          (recur (rest pvs) (rest nxs) next-el))))))
+          (when (and nc (not= pc nc))
+            (render-recur! pc nc (nth-child host n))))
+        (recur (rest pvs) (rest nxs) (inc n))))))
 
 (defn render!
   ([nx-src host]

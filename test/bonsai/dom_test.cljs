@@ -66,15 +66,14 @@
       (sut/render! prev "boop" mount)
       (t/is (= "boop" (.-innerHTML mount)))))
 
-  ;; These fail...
-  #_(t/testing "text->node"
+  (t/testing "text->node"
     (let [mount (build-mount)
           prev (sut/render! "boop" mount)]
       (t/is (= "boop" (.-innerHTML mount)))
       (sut/render! prev [:p "boop"] mount)
       (t/is (= "<p>boop</p>" (.-innerHTML mount)))))
 
-  #_(t/testing "completely different trees"
+  (t/testing "completely different trees"
     (let [mount (build-mount)
           prev (sut/render! [:div "A" [:div "B" [:p "C" "D"]] [:input] [:div "Hello, " [:header [:footer "World!"]]]] mount)]
       (t/is (= "<div>A<div>B<p>CD</p></div><input><div>Hello, <header><footer>World!</footer></header></div></div>" (.-innerHTML mount)))
