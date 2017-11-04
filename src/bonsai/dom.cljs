@@ -39,13 +39,13 @@
   (let [el (tree->el (document host) tree)]
     (.appendChild host el)))
 
-(defn migrate! [old [type value :as tree]]
-  (if (= type :text)
+(defn migrate! [old [prev-type _] [type value :as tree]]
+  (if  (= prev-type type :text)
     (do (aset old "nodeValue" value) old)
     (let [el (tree->el (document old) tree)
           host (.-parentNode old)]
       (.replaceChild host el old)
-      (doseq [child (into [] (array-seq (.-children old)))]
+      (doseq [child (when-let [children (aget old "children")] (into [] (array-seq children)))]
         (.appendChild el child))
       el)))
 
@@ -61,11 +61,6 @@
     :node (:children value)
     nil nil))
 
-(defn ensure-vec [tree]
-  (if (keyword? (first tree))
-    [tree]
-    tree))
-
 (defn render-recur! [pvs nxs host]
   (loop [pvs pvs
          nxs nxs
@@ -77,7 +72,7 @@
                         (= pv nx) (next-sibling el)
                         (and pv (nil? nx)) (remove! el)
                         (and (nil? pv) nx) (next-sibling (append! host nx))
-                        (not= (fingerprint pv) (fingerprint nx)) (next-sibling (migrate! el nx)))
+                        (not= (fingerprint pv) (fingerprint nx)) (next-sibling (migrate! el pv nx)))
               pc (node-children pv)
               nc (node-children nx)]
           (when (and (or pc nc) (not= pc nc))
@@ -89,5 +84,5 @@
    (render! nil nx-src host))
   ([pv nx-src host]
    (let [nx (conform-tree nx-src)]
-     (render-recur! (ensure-vec pv) (ensure-vec nx) host)
+     (render-recur! [pv] [nx] host)
      nx)))

@@ -43,6 +43,42 @@
       (let [prev (sut/render! prev [:ul [:li "Hello, " [:span "Bonsai!"]] [:li "Hard " "enough?"]] mount)]
         (t/is (= "<ul><li>Hello, <span>Bonsai!</span></li><li>Hard enough?</li></ul>" (.-innerHTML mount)))
         (sut/render! prev [:ol [:li "Hello, " [:span "Bonsai!"]] [:li "Hard " "enough?"]] mount)
-        (t/is (= "<ol><li>Hello, <span>Bonsai!</span></li><li>Hard enough?</li></ol>" (.-innerHTML mount)))))))
+        (t/is (= "<ol><li>Hello, <span>Bonsai!</span></li><li>Hard enough?</li></ol>" (.-innerHTML mount))))))
+
+  (t/testing "lengthening"
+    (let [mount (build-mount)
+          prev (sut/render! [:ul [:li "A"]] mount)]
+      (t/is (= "<ul><li>A</li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul [:li "A"] [:li "B"]] mount)
+      (t/is (= "<ul><li>A</li><li>B</li></ul>" (.-innerHTML mount)))))
+
+  (t/testing "shortening"
+    (let [mount (build-mount)
+          prev (sut/render! [:ul [:li "A"] [:li "B"]] mount)]
+      (t/is (= "<ul><li>A</li><li>B</li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul [:li "A"]] mount)
+      (t/is (= "<ul><li>A</li></ul>" (.-innerHTML mount)))))
+
+  (t/testing "node->text"
+    (let [mount (build-mount)
+          prev (sut/render! [:p "boop"] mount)]
+      (t/is (= "<p>boop</p>" (.-innerHTML mount)))
+      (sut/render! prev "boop" mount)
+      (t/is (= "boop" (.-innerHTML mount)))))
+
+  ;; These fail...
+  #_(t/testing "text->node"
+    (let [mount (build-mount)
+          prev (sut/render! "boop" mount)]
+      (t/is (= "boop" (.-innerHTML mount)))
+      (sut/render! prev [:p "boop"] mount)
+      (t/is (= "<p>boop</p>" (.-innerHTML mount)))))
+
+  #_(t/testing "completely different trees"
+    (let [mount (build-mount)
+          prev (sut/render! [:div "A" [:div "B" [:p "C" "D"]] [:input] [:div "Hello, " [:header [:footer "World!"]]]] mount)]
+      (t/is (= "<div>A<div>B<p>CD</p></div><input><div>Hello, <header><footer>World!</footer></header></div></div>" (.-innerHTML mount)))
+      (sut/render! prev [:p [:span "This is completely"] " " [:span "different."]] mount)
+      (t/is (= "<p><span>This is completely</span> <span>different.</span></p>" (.-innerHTML mount))))))
 
 (t/run-tests 'bonsai.dom-test)
