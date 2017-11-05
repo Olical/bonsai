@@ -78,6 +78,25 @@
           prev (sut/render! [:div "A" [:div "B" [:p "C" "D"]] [:input] [:div "Hello, " [:header [:footer "World!"]]]] mount)]
       (t/is (= "<div>A<div>B<p>CD</p></div><input><div>Hello, <header><footer>World!</footer></header></div></div>" (.-innerHTML mount)))
       (sut/render! prev [:p [:span "This is completely"] " " [:span "different."]] mount)
-      (t/is (= "<p><span>This is completely</span> <span>different.</span></p>" (.-innerHTML mount))))))
+      (t/is (= "<p><span>This is completely</span> <span>different.</span></p>" (.-innerHTML mount)))))
+
+  (t/testing "reordering"
+    (let [mount (build-mount)
+          prev (sut/render! [:ul [:li "A"] [:li "B"] [:li "C"]] mount)]
+      (t/is (= "<ul><li>A</li><li>B</li><li>C</li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul [:li "A"] [:li "C"] [:li "B"]] mount)
+      (t/is (= "<ul><li>A</li><li>C</li><li>B</li></ul>" (.-innerHTML mount)))))
+
+  (t/testing "gaps"
+    (let [mount (build-mount)
+          prev (sut/render! [:ul [:li "A"] [:li "B"] [:li "C"]] mount)]
+      (t/is (= "<ul><li>A</li><li>B</li><li>C</li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul [:li "A"] nil [:li "C"]] mount)
+      (t/is (= "<ul><li>A</li><li>C</li></ul>" (.-innerHTML mount))))
+    (let [mount (build-mount)
+          prev (sut/render! [:ul [:li "A"] nil [:li "C"]] mount)]
+      (t/is (= "<ul><li>A</li><li>C</li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul [:li "A"] [:li "B"] [:li "C"]] mount)
+      (t/is (= "<ul><li>A</li><li>B</li><li>C</li></ul>" (.-innerHTML mount))))))
 
 (t/run-tests 'bonsai.dom-test)

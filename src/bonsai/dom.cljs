@@ -24,9 +24,12 @@
 (defn remove! [host el]
   (.removeChild host el))
 
-(defn append! [host tree]
-  (let [el (tree->el (document host) tree)]
-    (.appendChild host el)))
+(defn insert! [host ref-el tree]
+  (let [el (tree->el (document host) tree)
+        target (when ref-el (.-nextSibling ref-el))]
+    (if target
+      (.insertBefore host el target)
+      (.appendChild host el))))
 
 (defn children [el]
   (when el
@@ -66,7 +69,7 @@
         (cond
           (= pv nx) nil
           (and pv (nil? nx)) (remove! host el)
-          (and (nil? pv) nx) (append! host nx)
+          (and (nil? pv) nx) (insert! host el nx)
           (not= (fingerprint pv) (fingerprint nx)) (migrate! host el pv nx))
         (let [pc (node-children pv)
               nc (node-children nx)]
