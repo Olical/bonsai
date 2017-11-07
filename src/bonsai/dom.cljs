@@ -2,10 +2,10 @@
   (:require [cljs.spec.alpha :as s]
             [expound.alpha :as expound]))
 
-(s/def ::tree (s/nilable
-               (s/or :text string?
-                     :node (s/cat :name keyword?
-                                  :children (s/* ::tree)))))
+(s/def ::tree (s/or :void nil?
+                    :text string?
+                    :node (s/cat :name keyword?
+                                 :children (s/* ::tree))))
 
 (defn conform-tree [src]
   (let [tree (s/conform ::tree src)]
@@ -16,8 +16,7 @@
 (defn tree->el [document [type value :as tree]]
   (case type
     :text (.createTextNode document value)
-    :node (.createElement document (name (:name value)))
-    (throw (js/Error. (str "Could not build an element from a node of type '" (pr-str type) "'.")))))
+    :node (.createElement document (name (:name value)))))
 
 (defn document [el]
   (.-ownerDocument el))
@@ -50,16 +49,18 @@
 (defn fingerprint [[type value]]
   (case type
     :text [:text value]
-    :node [:node (:name value)]
-    nil nil
-    (throw (js/Error. (str "Could not fingerprint type '" (pr-str type) "'.")))))
+    :node [:node (:name value)]))
 
 (defn node-children [[type value :as tree]]
   (case type
     :text nil
     :node (:children value)
-    nil nil
-    (throw (js/Error. (str "Could not get children for '" (pr-str type) "'.")))))
+    nil))
+
+(defn void? [[type _ :as node]]
+  (or (nil? node) (= type :void)))
+
+(def real? (complement void?))
 
 (defn render-recur! [pvs nxs host]
   (loop [pvs pvs
@@ -71,9 +72,9 @@
       (when (or pv nx)
         (cond
           (= pv nx) nil
-          (and pv (nil? nx)) (remove! host el)
-          (and (nil? pv) nx) (insert! host el nx)
-          (not= (fingerprint pv) (fingerprint nx)) (migrate! host el pv nx))
+          (and (real? pv) (void? nx)) (remove! host el)
+          (and (void? pv) (real? nx)) (insert! host el nx)
+          (and (real? pv) (real? nx) (not= (fingerprint pv) (fingerprint nx))) (migrate! host el pv nx))
         (let [pc (node-children pv)
               nc (node-children nx)]
           (when (and nc (not= pc nc))
