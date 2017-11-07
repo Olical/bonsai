@@ -16,7 +16,8 @@
 (defn tree->el [document [type value :as tree]]
   (case type
     :text (.createTextNode document value)
-    :node (.createElement document (name (:name value)))))
+    :node (.createElement document (name (:name value)))
+    (throw (js/Error. (str "Could not build an element from a node of type '" (pr-str type) "'.")))))
 
 (defn document [el]
   (.-ownerDocument el))
@@ -50,13 +51,15 @@
   (case type
     :text [:text value]
     :node [:node (:name value)]
-    nil nil))
+    nil nil
+    (throw (js/Error. (str "Could not fingerprint type '" (pr-str type) "'.")))))
 
 (defn node-children [[type value :as tree]]
   (case type
     :text nil
     :node (:children value)
-    nil nil))
+    nil nil
+    (throw (js/Error. (str "Could not get children for '" (pr-str type) "'.")))))
 
 (defn render-recur! [pvs nxs host]
   (loop [pvs pvs
