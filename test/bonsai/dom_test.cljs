@@ -87,7 +87,7 @@
       (sut/render! prev [:ul [:li "A"] [:li "C"] [:li "B"]] mount)
       (t/is (= "<ul><li>A</li><li>C</li><li>B</li></ul>" (.-innerHTML mount)))))
 
-  #_(t/testing "gaps"
+  (t/testing "gaps"
     (let [mount (build-mount)
           prev (sut/render! [:ul [:li "A"] [:li "B"] [:li "C"]] mount)]
       (t/is (= "<ul><li>A</li><li>B</li><li>C</li></ul>" (.-innerHTML mount)))

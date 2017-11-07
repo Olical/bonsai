@@ -25,10 +25,9 @@
   (.removeChild host el))
 
 (defn insert! [host ref-el tree]
-  (let [el (tree->el (document host) tree)
-        target (when ref-el (.-nextSibling ref-el))]
-    (if target
-      (.insertBefore host el target)
+  (let [el (tree->el (document host) tree)]
+    (if ref-el
+      (.insertBefore host el ref-el)
       (.appendChild host el))))
 
 (defn children [el]
@@ -76,10 +75,11 @@
           (and (void? pv) (real? nx)) (insert! host el nx)
           (and (real? pv) (real? nx) (not= (fingerprint pv) (fingerprint nx))) (migrate! host el pv nx))
         (let [pc (node-children pv)
-              nc (node-children nx)]
-          (when (and nc (not= pc nc))
-            (render-recur! pc nc (nth-child host n))))
-        (recur (rest pvs) (rest nxs) (inc n))))))
+              nc (node-children nx)
+              n (+ n (when (void? nx) -1))]
+          (when (and (real? nx) nc (not= pc nc))
+            (render-recur! pc nc (nth-child host n)))
+          (recur (rest pvs) (rest nxs) (inc n)))))))
 
 (defn render!
   ([nx-src host]
