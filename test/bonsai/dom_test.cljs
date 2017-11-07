@@ -50,6 +50,11 @@
           prev (sut/render! [:ul [:li "A"]] mount)]
       (t/is (= "<ul><li>A</li></ul>" (.-innerHTML mount)))
       (sut/render! prev [:ul [:li "A"] [:li "B"]] mount)
+      (t/is (= "<ul><li>A</li><li>B</li></ul>" (.-innerHTML mount))))
+    (let [mount (build-mount)
+          prev (sut/render! [:ul [:li "A"] nil] mount)]
+      (t/is (= "<ul><li>A</li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul [:li "A"] nil nil [:li "B"]] mount)
       (t/is (= "<ul><li>A</li><li>B</li></ul>" (.-innerHTML mount)))))
 
   (t/testing "shortening"
@@ -57,6 +62,11 @@
           prev (sut/render! [:ul [:li "A"] [:li "B"]] mount)]
       (t/is (= "<ul><li>A</li><li>B</li></ul>" (.-innerHTML mount)))
       (sut/render! prev [:ul [:li "A"]] mount)
+      (t/is (= "<ul><li>A</li></ul>" (.-innerHTML mount))))
+    (let [mount (build-mount)
+          prev (sut/render! [:ul [:li "A"] nil [:li "B"]] mount)]
+      (t/is (= "<ul><li>A</li><li>B</li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul nil [:li "A"] nil] mount)
       (t/is (= "<ul><li>A</li></ul>" (.-innerHTML mount)))))
 
   (t/testing "node->text"
@@ -97,6 +107,11 @@
           prev (sut/render! [:ul [:li "A"] nil [:li "C"]] mount)]
       (t/is (= "<ul><li>A</li><li>C</li></ul>" (.-innerHTML mount)))
       (sut/render! prev [:ul [:li "A"] [:li "B"] [:li "C"]] mount)
+      (t/is (= "<ul><li>A</li><li>B</li><li>C</li></ul>" (.-innerHTML mount))))
+    (let [mount (build-mount)
+          prev (sut/render! [:ul [:li "A"] nil nil nil [:li "C"]] mount)]
+      (t/is (= "<ul><li>A</li><li>C</li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul [:li "A"] nil [:li "B"] nil [:li "C"]] mount)
       (t/is (= "<ul><li>A</li><li>B</li><li>C</li></ul>" (.-innerHTML mount))))))
 
 (t/run-tests 'bonsai.dom-test)
