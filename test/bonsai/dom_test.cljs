@@ -119,6 +119,14 @@
           prev (sut/render! [:ul nil nil [:li nil "A" nil nil] nil nil [:li nil "B"] nil nil nil [:li "C" nil] nil nil] mount)]
       (t/is (= "<ul><li>A</li><li>B</li><li>C</li></ul>" (.-innerHTML mount)))
       (sut/render! prev [:ul nil nil [:li nil "A" nil nil] nil nil [:li nil "C"] nil nil [:li "B" nil]] mount)
-      (t/is (= "<ul><li>A</li><li>C</li><li>B</li></ul>" (.-innerHTML mount))))))
+      (t/is (= "<ul><li>A</li><li>C</li><li>B</li></ul>" (.-innerHTML mount)))))
+
+  (t/testing "seqs are flattened"
+    (let [mount (build-mount)]
+      (sut/render! [:p (map identity ["a" "b" [:span "c"]])] mount)
+      (t/is (= "<p>ab<span>c</span></p>" (.-innerHTML mount))))
+    (let [mount (build-mount)]
+      (sut/render! [:p (map identity ["a" '("1" "2" "3" ("4" [:em "5"] "6")) "b" [:span "c"]])] mount)
+      (t/is (= "<p>a1234<em>5</em>6b<span>c</span></p>" (.-innerHTML mount))))))
 
 (t/run-tests 'bonsai.dom-test)

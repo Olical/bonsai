@@ -4,8 +4,11 @@
 
 (s/def ::tree (s/or :void nil?
                     :text string?
+                    :node-seq (s/coll-of ::tree :kind seq?)
                     :node (s/cat :name keyword?
                                  :children (s/* ::tree))))
+
+(expound/expound-str (s/coll-of number? :kind seq?) (map inc [1 2 3]))
 
 (defn conform-tree [src]
   (let [tree (s/conform ::tree src)]
@@ -61,9 +64,18 @@
 
 (def real? (complement void?))
 
+(defn flatten-node-seqs [nodes]
+  (loop [nodes nodes
+         acc []]
+    (if-let [[type value :as node] (first nodes)]
+      (if (= type :node-seq)
+        (recur (concat value (rest nodes)) acc)
+        (recur (rest nodes) (conj acc node)))
+      acc)))
+
 (defn render-recur! [pvs nxs host]
-  (loop [pvs pvs
-         nxs nxs
+  (loop [pvs (flatten-node-seqs pvs)
+         nxs (flatten-node-seqs nxs)
          n 0]
     (let [pv (first pvs)
           nx (first nxs)
