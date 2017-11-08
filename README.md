@@ -1,19 +1,26 @@
+> This is a work in progress and is probably just going to be a research project, not intended for full production use. If it's really useful maybe I'll keep going until it _is_ production ready though. - @Olical 8th November 2017
+
 # Bonsai [![Build Status](https://travis-ci.org/Olical/bonsai.svg?branch=master)](https://travis-ci.org/Olical/bonsai) [![Clojars Project](https://img.shields.io/clojars/v/olical/bonsai.svg)](https://clojars.org/olical/bonsai)
 
 Declarative DOM rendering with integrated state management for [ClojureScript][].
 
 ## To do
 
- * [ ] `bonsai.tree` - Tools to work with hiccup like trees. Mostly just to generate change sets between them.
- * [ ] `bonsai.dom` - Mount and render trees into the DOM using `bonsai.tree` for change detection.
- * [ ] `bonsai.html` - Render a tree to HTML. The ClojureScript should be able to continue where the Clojure left off through hydration.
- * [ ] Full documentation of all public functions including examples.
- * [ ] Implement my tiny todo app with this instead of Reagent.
- * [ ] Implement another Game of Life using this instead of re-frame.
+ * [x] Rendering basic trees of nodes and text.
+ * [x] Handling of weird trees, like nested seqs of nodes and nils all over the place.
+ * [x] Performing minimal changes to transform any tree into another tree.
+ * [x] Adding, updating or removing node attributes such as `id` or `class` (yes, `class`, you don't need `className` here).
+ * [ ] Rendering functions in the tree, these are components I guess? I make no distinction.
+ * [ ] Special casing event attributes to give us some hook into events.
+ * [ ] Integrating state management into the rendering and event pipeline.
+ * [ ] Rendering on the server and picking up where you left off on the client. This is called "hydration" and should be easy.
+ * [ ] Various optimisations for things like reordering items without changing them.
+ * [ ] The inevitable bug fixes that will be required because of Internet Explorer.
+ * [ ] Documenting and speccing the shit out of everything because it should be solid by this point.
 
 ## Potential usage
 
-This is just an outline of what I want usage to be like.
+This is just an outline of what I want usage to be like. This is not a final design, just some syntactic doodles.
 
 ```clojure
 (defn inc-value [state]
@@ -29,14 +36,13 @@ This is just an outline of what I want usage to be like.
 (ns myapp.frontend
   (:require [bonsai.dom :as dom]))
   
-(dom/render [app] {:value 0}
-            (js/document.getElementById "app"))
+(dom/mount! {:value 0} [app] (js/document.getElementById "app"))
 ```
 
 ```clojure
 (ns myapp.backend
   (:require [bonsai.html :as html]))
-  
+
 (html/render [app] {:value 0})
 ```
 
