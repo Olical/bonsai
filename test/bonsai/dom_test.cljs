@@ -153,6 +153,11 @@
           prev (sut/render! [:p {:id "foo"} "hi"] mount)]
       (t/is (= "<p id=\"foo\">hi</p>" (.-innerHTML mount)))
       (sut/render! prev [:p {:id nil} "hi"] mount)
-      (t/is (= "<p>hi</p>" (.-innerHTML mount))))))
+      (t/is (= "<p>hi</p>" (.-innerHTML mount)))))
+
+  (t/testing "class is an attr"
+    (let [mount (build-mount)]
+      (sut/render! [:p {:class "yay"} "hi"] mount)
+      (t/is (= "<p class=\"yay\">hi</p>" (.-innerHTML mount))))))
 
 (t/run-tests 'bonsai.dom-test)
