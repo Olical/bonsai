@@ -29,7 +29,7 @@ This is just an outline of what I want usage to be like. This is not a final des
 (defn app [state]
   [:p
     {:on-click [inc-value]}
-    (:value state)])
+    (str (:value state))])
 ```
 
 ```clojure
