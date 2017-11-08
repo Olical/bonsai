@@ -112,6 +112,13 @@
           prev (sut/render! [:ul [:li "A"] nil nil nil [:li "C"]] mount)]
       (t/is (= "<ul><li>A</li><li>C</li></ul>" (.-innerHTML mount)))
       (sut/render! prev [:ul [:li "A"] nil [:li "B"] nil [:li "C"]] mount)
-      (t/is (= "<ul><li>A</li><li>B</li><li>C</li></ul>" (.-innerHTML mount))))))
+      (t/is (= "<ul><li>A</li><li>B</li><li>C</li></ul>" (.-innerHTML mount)))))
+
+  (t/testing "nils everywhere!"
+    (let [mount (build-mount)
+          prev (sut/render! [:ul nil nil [:li nil "A" nil nil] nil nil [:li nil "B"] nil nil nil [:li "C" nil] nil nil] mount)]
+      (t/is (= "<ul><li>A</li><li>B</li><li>C</li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul nil nil [:li nil "A" nil nil] nil nil [:li nil "C"] nil nil [:li "B" nil]] mount)
+      (t/is (= "<ul><li>A</li><li>C</li><li>B</li></ul>" (.-innerHTML mount))))))
 
 (t/run-tests 'bonsai.dom-test)
