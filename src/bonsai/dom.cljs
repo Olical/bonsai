@@ -6,6 +6,9 @@
                     :text string?
                     :node-seq (s/coll-of ::tree :kind seq?)
                     :node (s/cat :name keyword?
+                                 :attrs (s/? (s/map-of keyword?
+                                                       (s/or :void nil?
+                                                             :text string?)))
                                  :children (s/* ::tree))))
 
 (expound/expound-str (s/coll-of number? :kind seq?) (map inc [1 2 3]))
@@ -33,6 +36,12 @@
       (.insertBefore host el ref-el)
       (.appendChild host el))))
 
+(defn remove-attr! [el attr-key]
+  (.removeAttribute el (name attr-key)))
+
+(defn set-attr! [el attr-key attr-value]
+  (.setAttribute el (name attr-key) attr-value))
+
 (defn children [el]
   (when el
     (into [] (array-seq (aget el "childNodes")))))
@@ -59,6 +68,12 @@
     :node (:children value)
     nil))
 
+(defn node-attrs [[type value :as tree]]
+  (case type
+    :text nil
+    :node (:attrs value)
+    nil))
+
 (defn void? [[type _ :as node]]
   (or (nil? node) (= type :void)))
 
@@ -73,6 +88,15 @@
         (recur (rest nodes) (conj acc node)))
       acc)))
 
+(defn render-attrs! [pas nas el]
+  (doseq [attr-key (set (concat (keys pas) (keys nas)))]
+    (let [pa (get pas attr-key)
+          na (get nas attr-key)]
+      (cond
+        (= pa na) nil
+        (void? na) (remove-attr! el attr-key)
+        (real? na) (set-attr! el attr-key (second na))))))
+
 (defn render-recur! [pvs nxs host]
   (loop [pvs (flatten-node-seqs pvs)
          nxs (flatten-node-seqs nxs)
@@ -86,11 +110,11 @@
           (and (real? pv) (void? nx)) (remove! host el)
           (and (void? pv) (real? nx)) (insert! host el nx)
           (and (real? pv) (real? nx) (not= (fingerprint pv) (fingerprint nx))) (migrate! host el pv nx))
-        (let [pc (node-children pv)
-              nc (node-children nx)
-              n (+ n (when (void? nx) -1))]
-          (when (and (real? nx) nc (not= pc nc))
-            (render-recur! pc nc (nth-child host n)))
+        (let [n (+ n (when (void? nx) -1))
+              child-el (nth-child host n)]
+          (when (real? nx)
+            (render-attrs! (node-attrs pv) (node-attrs nx) child-el)
+            (render-recur! (node-children pv) (node-children nx) child-el))
           (recur (rest pvs) (rest nxs) (inc n)))))))
 
 (defn render!

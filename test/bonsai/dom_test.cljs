@@ -127,6 +127,32 @@
       (t/is (= "<p>ab<span>c</span></p>" (.-innerHTML mount))))
     (let [mount (build-mount)]
       (sut/render! [:p (map identity ["a" '("1" "2" "3" ("4" [:em "5"] "6")) "b" [:span "c"]])] mount)
-      (t/is (= "<p>a1234<em>5</em>6b<span>c</span></p>" (.-innerHTML mount))))))
+      (t/is (= "<p>a1234<em>5</em>6b<span>c</span></p>" (.-innerHTML mount)))))
+
+  (t/testing "attrs are added"
+    (let [mount (build-mount)
+          prev (sut/render! [:p "hi"] mount)]
+      (t/is (= "<p>hi</p>" (.-innerHTML mount)))
+      (sut/render! prev [:p {:id "foo"} "hi"] mount)
+      (t/is (= "<p id=\"foo\">hi</p>" (.-innerHTML mount)))))
+
+  (t/testing "attrs are updated"
+    (let [mount (build-mount)
+          prev (sut/render! [:p {:id "foo"} "hi"] mount)]
+      (t/is (= "<p id=\"foo\">hi</p>" (.-innerHTML mount)))
+      (sut/render! prev [:p {:id "bar"} "hi"] mount)
+      (t/is (= "<p id=\"bar\">hi</p>" (.-innerHTML mount)))))
+
+  (t/testing "attrs are removed"
+    (let [mount (build-mount)
+          prev (sut/render! [:p {:id "foo"} "hi"] mount)]
+      (t/is (= "<p id=\"foo\">hi</p>" (.-innerHTML mount)))
+      (sut/render! prev [:p "hi"] mount)
+      (t/is (= "<p>hi</p>" (.-innerHTML mount))))
+    (let [mount (build-mount)
+          prev (sut/render! [:p {:id "foo"} "hi"] mount)]
+      (t/is (= "<p id=\"foo\">hi</p>" (.-innerHTML mount)))
+      (sut/render! prev [:p {:id nil} "hi"] mount)
+      (t/is (= "<p>hi</p>" (.-innerHTML mount))))))
 
 (t/run-tests 'bonsai.dom-test)
