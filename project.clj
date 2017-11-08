@@ -3,9 +3,9 @@
   :url "https://github.com/Olical/bonsai"
   :license {:name "Unlicense"
             :url "https://unlicense.org/"}
-  :dependencies [[org.clojure/clojure "1.9.0-beta4"]
+  :dependencies [[org.clojure/clojure "1.9.0-RC1"]
                  [org.clojure/clojurescript "1.9.946"]
-                 [expound "0.3.2"]]
+                 [expound "0.3.3"]]
   :profiles {:dev {:source-paths ["src" "dev"]
                    :dependencies [[com.cemerick/piggieback "0.2.2"]]
                    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
