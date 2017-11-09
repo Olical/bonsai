@@ -18,4 +18,5 @@
                                    :optimizations :none
                                    :npm-deps {:jsdom "11.3.0"}
                                    :target :nodejs}}]}
-  :aliases {"test" ["doo" "node" "test" "once"]})
+  :aliases {"test-cljs" ["doo" "node" "test" "once"]
+            "test-all" ["do" "test," "test-cljs"]})

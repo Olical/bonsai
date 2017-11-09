@@ -1,4 +1,4 @@
 language: clojure
 script:
- - yarn
- - lein test
+ - npm install
+ - lein test-all
