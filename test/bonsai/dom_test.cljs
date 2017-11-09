@@ -159,5 +159,3 @@
     (let [mount (build-mount)]
       (sut/render! [:p {:class "yay"} "hi"] mount)
       (t/is (= "<p class=\"yay\">hi</p>" (.-innerHTML mount))))))
-
-(t/run-tests 'bonsai.dom-test)

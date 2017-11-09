@@ -6,5 +6,3 @@
 (t/deftest conform
   (t/testing "nil is void"
     (t/is (= [:void nil] (sut/conform nil)))))
-
-(t/run-tests 'bonsai.tree-test)

@@ -49,8 +49,8 @@
         (tree/real? na) (set-attr! el attr-key (second na))))))
 
 (defn render-recur! [pvs nxs host]
-  (loop [pvs (tree/flatten pvs)
-         nxs (tree/flatten nxs)
+  (loop [pvs (tree/flatten-seqs pvs)
+         nxs (tree/flatten-seqs nxs)
          n 0]
     (let [pv (first pvs)
           nx (first nxs)

@@ -40,7 +40,7 @@
 
 (def real? (complement void?))
 
-(defn flatten [nodes]
+(defn flatten-seqs [nodes]
   (loop [nodes nodes
          acc []]
     (if-let [[type value :as node] (first nodes)]
