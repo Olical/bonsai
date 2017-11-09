@@ -158,4 +158,11 @@
   (t/testing "class is an attr"
     (let [mount (build-mount)]
       (sut/render! [:p {:class "yay"} "hi"] mount)
-      (t/is (= "<p class=\"yay\">hi</p>" (.-innerHTML mount))))))
+      (t/is (= "<p class=\"yay\">hi</p>" (.-innerHTML mount)))))
+
+  (t/testing "migrated nodes carry attrs over"
+    (let [mount (build-mount)
+          prev (sut/render! [:p {:id "foo"} "hi"] mount)]
+      (t/is (= "<p id=\"foo\">hi</p>" (.-innerHTML mount)))
+      (sut/render! prev [:div {:id "foo"} "hi"] mount)
+      (t/is (= "<div id=\"foo\">hi</div>" (.-innerHTML mount))))))

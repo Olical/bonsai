@@ -28,25 +28,29 @@
   (when el
     (into [] (array-seq (aget el "childNodes")))))
 
+(defn nth-child [el n]
+  (nth (children el) n nil))
+
+(defn render-attrs!
+  ([nas el]
+   (render-attrs! nil nas el))
+  ([pas nas el]
+   (doseq [attr-key (set (concat (keys pas) (keys nas)))]
+     (let [pa (get pas attr-key)
+           na (get nas attr-key)]
+       (cond
+         (= pa na) nil
+         (tree/void? na) (remove-attr! el attr-key)
+         (tree/real? na) (set-attr! el attr-key (second na)))))))
+
 (defn migrate! [host old [prev-type _] [type value :as tree]]
   (if (= prev-type type :text)
     (aset old "nodeValue" value)
     (let [el (tree->el (document old) tree)]
+      (render-attrs! (tree/attrs tree) el)
       (.replaceChild host el old)
       (doseq [child (children old)]
         (.appendChild el child)))))
-
-(defn nth-child [el n]
-  (nth (children el) n nil))
-
-(defn render-attrs! [pas nas el]
-  (doseq [attr-key (set (concat (keys pas) (keys nas)))]
-    (let [pa (get pas attr-key)
-          na (get nas attr-key)]
-      (cond
-        (= pa na) nil
-        (tree/void? na) (remove-attr! el attr-key)
-        (tree/real? na) (set-attr! el attr-key (second na))))))
 
 (defn render-recur! [pvs nxs host]
   (loop [pvs (tree/flatten-seqs pvs)
