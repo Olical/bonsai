@@ -6,11 +6,12 @@
 (s/def ::tree (s/or :void nil?
                     :text string?
                     :node-seq (s/coll-of ::tree :kind seq?)
-                    :node (s/cat :name keyword?
-                                 :attrs (s/? (s/map-of keyword?
-                                                       (s/or :void nil?
-                                                             :text string?)))
-                                 :children (s/* ::tree))))
+                    :node (s/and vector?
+                                 (s/cat :name keyword?
+                                        :attrs (s/? (s/map-of keyword?
+                                                              (s/or :void nil?
+                                                                    :text string?)))
+                                        :children (s/* ::tree)))))
 
 (defn conform [src]
   (let [tree (s/conform ::tree src)]
