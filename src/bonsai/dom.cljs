@@ -43,11 +43,11 @@
          (tree/void? na) (remove-attr! el attr-key)
          (tree/real? na) (set-attr! el attr-key (second na)))))))
 
-(defn migrate! [host old [prev-type _] [type value :as tree]]
+(defn migrate! [host old [prev-type _ :as prev-tree] [type value :as tree]]
   (if (= prev-type type :text)
     (aset old "nodeValue" value)
     (let [el (tree->el (document old) tree)]
-      (render-attrs! (tree/attrs tree) el)
+      (render-attrs! (tree/attrs prev-tree) el)
       (.replaceChild host el old)
       (doseq [child (children old)]
         (.appendChild el child)))))
