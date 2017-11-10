@@ -2,3 +2,9 @@ language: clojure
 script:
  - npm install
  - lein test-all
+cache:
+  directories:
+    - node_modules
+    - target
+    - out
+    - $HOME/.m2
