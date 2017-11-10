@@ -19,10 +19,10 @@
       (throw (#?(:clj Exception. :cljs js/Error.) (expound/expound-str ::tree src)))
       tree)))
 
-(defn fingerprint [[type value]]
+(defn fingerprint [[type value :as node]]
   (case type
-    :text [:text value]
-    :node [:node (:name value)]))
+    :text node
+    :node [type (:name value)]))
 
 (defn children [[type value :as tree]]
   (case type
