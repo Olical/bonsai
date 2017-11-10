@@ -20,5 +20,13 @@ I usually have a small terminal open with `lein test-cljs-auto` (`lein doo node 
 
 Make sure you add some sort of test to prove your change works as expected, they will also  be run for you in [Travis CI][travis].The test results will show up on your pull request.
 
+## Don't be shy
+
+If you think you want to help out, or just have some questions, please feel free to contact me. I'll be more than happy to help you out or answer your questions.
+
+Thanks for reading.
+
+Oliver Caldwell (@Olical)
+
 [twoot]: https://twitter.com/OliverCaldwell
-[travis]: https://travis-ci.org/
+[travis]: https://travis-ci.org/Olical/bonsai
