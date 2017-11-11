@@ -69,3 +69,8 @@
               (sut/conform "world")
               (sut/conform "!")
               (sut/conform "another")]))))
+
+(t/deftest with-children
+  (t/testing "assocs children if the node supports them"
+    (t/is (= (sut/conform "hi") (sut/with-children (sut/conform "hi") [(sut/conform "no")])))
+    (t/is (= (sut/conform [:p "yes"]) (sut/with-children (sut/conform [:p]) [(sut/conform "yes")])))))

@@ -24,13 +24,18 @@
     :text node
     :node [type (:name value)]))
 
-(defn children [[type value :as tree]]
+(defn children [[type value]]
   (case type
     :text nil
     :node (:children value)
     nil))
 
-(defn attrs [[type value :as tree]]
+(defn with-children [[type _ :as node] children]
+  (if (= type :node)
+    (assoc-in node [1 :children] children)
+    node))
+
+(defn attrs [[type value]]
   (case type
     :text nil
     :node (:attrs value)

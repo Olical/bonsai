@@ -53,29 +53,34 @@
         (.appendChild el child)))))
 
 (defn render-recur! [pvs nxs host]
-  (loop [pvs (tree/flatten-seqs pvs)
+  (loop [pvs pvs
          nxs (tree/flatten-seqs nxs)
+         acc []
          n 0]
     (let [pv (first pvs)
           nx (first nxs)
           el (nth-child host n)]
-      (when (or pv nx)
-        (cond
-          (= pv nx) nil
-          (and (tree/real? pv) (tree/void? nx)) (remove! host el)
-          (and (tree/void? pv) (tree/real? nx)) (insert! host el nx)
-          (and (tree/real? pv) (tree/real? nx) (not= (tree/fingerprint pv) (tree/fingerprint nx))) (migrate! host el pv nx))
-        (let [n (+ n (when (tree/void? nx) -1))
-              child-el (nth-child host n)]
-          (when (tree/real? nx)
-            (render-attrs! (tree/attrs pv) (tree/attrs nx) child-el)
-            (render-recur! (tree/children pv) (tree/children nx) child-el))
-          (recur (rest pvs) (rest nxs) (inc n)))))))
+      (if (or pv nx)
+        (do
+          (cond
+            (= pv nx) nil
+            (and (tree/real? pv) (tree/void? nx)) (remove! host el)
+            (and (tree/void? pv) (tree/real? nx)) (insert! host el nx)
+            (and (tree/real? pv) (tree/real? nx) (not= (tree/fingerprint pv) (tree/fingerprint nx))) (migrate! host el pv nx))
+          (let [n (+ n (when (tree/void? nx) -1))
+                child-el (nth-child host n)
+                result (when (tree/real? nx)
+                         (render-attrs! (tree/attrs pv) (tree/attrs nx) child-el)
+                         (render-recur! (tree/children pv) (tree/children nx) child-el))]
+            (recur (rest pvs)
+                   (rest nxs)
+                   (conj acc (tree/with-children nx result))
+                   (inc n))))
+        acc))))
 
 (defn render!
   ([nx-src host]
    (render! nil nx-src host))
   ([pv nx-src host]
    (let [nx (tree/conform nx-src)]
-     (render-recur! [pv] [nx] host)
-     nx)))
+     (first (render-recur! [pv] [nx] host)))))
