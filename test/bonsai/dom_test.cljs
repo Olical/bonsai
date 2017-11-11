@@ -129,6 +129,16 @@
       (sut/render! [:p (map identity ["a" '("1" "2" "3" ("4" [:em "5"] "6")) "b" [:span "c"]])] mount)
       (t/is (= "<p>a1234<em>5</em>6b<span>c</span></p>" (.-innerHTML mount)))))
 
+  (t/testing "seqs can be used at the top level"
+    (let [mount (build-mount)
+          prev (sut/render! (map identity ["a" "b" [:span "c"]]) mount)]
+      (t/is (= "ab<span>c</span>" (.-innerHTML mount)))
+      (sut/render! prev (map identity ["a" "b" [:span "c"] [:strong "nice"]]) mount)
+      (t/is (= "ab<span>c</span><strong>nice</strong>" (.-innerHTML mount))))
+    (let [mount (build-mount)]
+      (sut/render! (map identity ["a" '("1" "2" "3" ("4" [:em "5"] "6")) "b" [:span "c"]]) mount)
+      (t/is (= "a1234<em>5</em>6b<span>c</span>" (.-innerHTML mount)))))
+
   (t/testing "attrs are added"
     (let [mount (build-mount)
           prev (sut/render! [:p "hi"] mount)]

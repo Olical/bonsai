@@ -83,4 +83,8 @@
    (render! nil nx-src host))
   ([pv nx-src host]
    (let [nx (tree/conform nx-src)]
-     (first (render-recur! [pv] [nx] host)))))
+     (render-recur! pv
+                    (if (seq? nx)
+                      nx
+                      (list nx))
+                    host))))
