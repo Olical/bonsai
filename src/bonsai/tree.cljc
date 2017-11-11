@@ -20,7 +20,7 @@
   (let [tree (s/conform ::tree src)]
     (if (s/invalid? tree)
       (throw (#?(:clj Exception. :cljs js/Error.) (expound/expound-str ::tree src)))
-      tree)))
+      (into [] tree))))
 
 (defn fingerprint [[type value :as node]]
   (case type
@@ -66,6 +66,5 @@
    (if (= type :node-fn)
      (if (= (::node-fn (meta pv)) value)
        pv
-       (let [result (conform (apply fn args))]
-         (with-meta result {::node-fn value})))
+       (with-meta (conform (apply fn args)) {::node-fn value}))
      node)))
