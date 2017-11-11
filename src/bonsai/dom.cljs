@@ -58,7 +58,7 @@
          acc []
          n 0]
     (let [pv (first pvs)
-          nx (first nxs)
+          nx (tree/expand pv (first nxs))
           el (nth-child host n)]
       (if (or pv nx)
         (do

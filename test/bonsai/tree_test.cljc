@@ -21,6 +21,13 @@
   (t/testing "seqs of nodes are, well, seqs of nodes"
     (t/is (= [:node-seq '([:text "a"] [:text "b"] [:text "c"])]
              (sut/conform (map identity ["a" "b" "c"])))))
+  (t/testing "functions are conformed into node-fns"
+    (t/is (= [:node-fn {:fn +}] (sut/conform [+])))
+    (t/is (= [:node-fn {:fn + :args [1 2 3]}] (sut/conform [+ 1 2 3])))
+    (t/is (= [:node {:name :p
+                     :children [[:text "hi"]
+                                [:node-fn {:fn + :args [1 2 3]}]]}]
+             (sut/conform [:p "hi" [+ 1 2 3]]))))
   (t/testing "bad conforms throw errors"
     (t/is (thrown-with-msg? #?(:clj Exception
                                :cljs js/Error)
@@ -28,15 +35,17 @@
                             (sut/conform :bad)))))
 
 (t/deftest fingerprint
-  (t/testing "text gives itself back"
-    (t/is (= (sut/fingerprint (sut/conform "hi")) [:text "hi"])))
+  (t/testing "text and node-fn gives itself back"
+    (t/is (= (sut/fingerprint (sut/conform "hi")) (sut/conform "hi")))
+    (t/is (= (sut/fingerprint (sut/conform [+ "hi"])) (sut/conform [+ "hi"]))))
   (t/testing "node gives the type and name"
     (t/is (= (sut/fingerprint (sut/conform [:div])) [:node :div]))))
 
 (t/deftest children
   (t/testing "children of things without children is nil"
     (t/is (= (sut/children nil) nil))
-    (t/is (= (sut/children (sut/conform "hi")) nil)))
+    (t/is (= (sut/children (sut/conform "hi")) nil))
+    (t/is (= (sut/children (sut/conform [+ "hi"])) nil)))
   (t/testing "children of things with children is their children"
     (t/is (= (sut/children (sut/conform [:p "hi"])) [[:text "hi"]]))))
 
@@ -44,7 +53,8 @@
   (t/testing "attrs of things without attrs is nil"
     (t/is (= (sut/attrs (sut/conform nil)) nil))
     (t/is (= (sut/attrs (sut/conform "hi")) nil))
-    (t/is (= (sut/attrs (sut/conform [:div])) nil)))
+    (t/is (= (sut/attrs (sut/conform [:div])) nil))
+    (t/is (= (sut/attrs (sut/conform [+ "hi"])) nil)))
   (t/testing "children of things with children is their children"
     (t/is (= (sut/attrs (sut/conform [:div {:id "foo"}])) {:id [:text "foo"]}))))
 
@@ -74,3 +84,24 @@
   (t/testing "assocs children if the node supports them"
     (t/is (= (sut/conform "hi") (sut/with-children (sut/conform "hi") [(sut/conform "no")])))
     (t/is (= (sut/conform [:p "yes"]) (sut/with-children (sut/conform [:p]) [(sut/conform "yes")])))))
+
+(t/deftest expand
+  (t/testing "on things like :text, nothing happens"
+    (t/is (= (sut/expand (sut/conform "hi")) (sut/conform "hi"))))
+  (t/testing "on node-fns, they are applied and the result is returned"
+    (let [f (fn [a] [:p "hi " a])]
+      (t/is (= (sut/expand (sut/conform [f "foo"])) (sut/conform [:p "hi " "foo"])))))
+  (t/testing "the args are encoded in the meta"
+    (let [f (fn [a] [:p "hi " a])]
+      (t/is (= {:bonsai.tree/node-fn {:fn f :args ["foo"]}}
+               (meta (sut/expand (sut/conform [f "foo"])))))))
+  (t/testing "if prev is provided, it will use that if the meta is the same"
+    (let [calls (atom 0)
+          f (fn [a] (swap! calls inc) [:p "hi " a])
+          prev (sut/expand (sut/conform [f "foo"]))]
+      (t/is (= prev (sut/conform [:p "hi " "foo"])))
+      (t/is (= @calls 1))
+      (t/is (= (sut/expand prev (sut/conform [f "foo"])) (sut/conform [:p "hi " "foo"])))
+      (t/is (= @calls 1))
+      (t/is (= (sut/expand prev (sut/conform [f "bar"])) (sut/conform [:p "hi " "bar"])))
+      (t/is (= @calls 2)))))

@@ -175,4 +175,35 @@
           prev (sut/render! [:p {:id "foo"} "hi"] mount)]
       (t/is (= "<p id=\"foo\">hi</p>" (.-innerHTML mount)))
       (sut/render! prev [:div {:id "foo"} "hi"] mount)
-      (t/is (= "<div id=\"foo\">hi</div>" (.-innerHTML mount))))))
+      (t/is (= "<div id=\"foo\">hi</div>" (.-innerHTML mount)))))
+
+  (t/testing "functions are called in the tree"
+    (let [mount (build-mount)
+          no-args (fn [] "no args")]
+      (sut/render! [no-args] mount)
+      (t/is (= "no args" (.-innerHTML mount))))
+    (let [mount (build-mount)
+          no-args (fn [] "no args")]
+      (sut/render! [:p [no-args]] mount)
+      (t/is (= "<p>no args</p>" (.-innerHTML mount))))
+    (let [mount (build-mount)
+          with-args (fn [a] [:p "with arg " a])]
+      (sut/render! [:div [with-args "hi"] "!"] mount)
+      (t/is (= "<div><p>with arg hi</p>!</div>" (.-innerHTML mount)))))
+
+  (t/testing "functions are called when their inputs change (and only then)"
+    (let [mount (build-mount)
+          calls (atom 0)
+          with-args (fn [a] (swap! calls inc) [:p "with arg " a])
+          prev (sut/render! [:div [with-args "hi"] "!"] mount)]
+      (t/is (= "<div><p>with arg hi</p>!</div>" (.-innerHTML mount)))
+      (t/is (= @calls 1))
+      (let [prev (sut/render! prev [:div [with-args "hi"] "!"] mount)]
+        (t/is (= "<div><p>with arg hi</p>!</div>" (.-innerHTML mount)))
+        (t/is (= @calls 1))
+        (let [prev (sut/render! prev [:div [with-args "bye"] "!"] mount)]
+          (t/is (= "<div><p>with arg bye</p>!</div>" (.-innerHTML mount)))
+          (t/is (= @calls 2))
+          (sut/render! prev [:div [with-args "bye"] "!"] mount)
+          (t/is (= "<div><p>with arg bye</p>!</div>" (.-innerHTML mount)))
+          (t/is (= @calls 2)))))))
