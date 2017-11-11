@@ -19,4 +19,5 @@
                                    :npm-deps {:jsdom "11.3.0"}
                                    :target :nodejs}}]}
   :aliases {"test-cljs" ["doo" "node" "test" "once"]
+            "test-cljs-auto" ["doo" "node" "test" "auto"]
             "test-all" ["do" "test," "test-cljs"]})
