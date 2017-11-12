@@ -11,7 +11,7 @@ Declarative DOM rendering with integrated state management for [ClojureScript][]
  * [x] Performing minimal changes to transform any tree into another tree.
  * [x] Adding, updating or removing node attributes such as `id` or `class` (yes, `class`, you don't need `className` here).
  * [x] Rendering functions in the tree, these are components I guess? I make no distinction.
- * [ ] Special casing event attributes to give us some hook into events.
+ * [x] Event listeners (adding, removing and updating).
  * [ ] Integrating state management into the rendering and event pipeline.
  * [ ] Rendering on the server and picking up where you left off on the client. This is called "hydration" and should be easy.
  * [ ] Various optimisations for things like reordering items without changing them.

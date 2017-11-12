@@ -1,3 +1,8 @@
+;; TODO
+;; test the various add/remove states for events and params
+;; test the partial application aspect of events
+;; add lifecycle events (render, add, remove etc)
+
 (ns bonsai.dom
   (:require [bonsai.tree :as tree]
             [cljs.spec.alpha :as s]
