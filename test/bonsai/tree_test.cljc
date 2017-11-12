@@ -51,12 +51,21 @@
 
 (t/deftest attrs
   (t/testing "attrs of things without attrs is nil"
-    (t/is (= (sut/attrs (sut/conform nil)) nil))
-    (t/is (= (sut/attrs (sut/conform "hi")) nil))
-    (t/is (= (sut/attrs (sut/conform [:div])) nil))
-    (t/is (= (sut/attrs (sut/conform [+ "hi"])) nil)))
+    (t/is (= (sut/attrs (sut/conform nil)) {}))
+    (t/is (= (sut/attrs (sut/conform "hi")) {}))
+    (t/is (= (sut/attrs (sut/conform [:div])) {}))
+    (t/is (= (sut/attrs (sut/conform [+ "hi"])) {})))
   (t/testing "children of things with children is their children"
-    (t/is (= (sut/attrs (sut/conform [:div {:id "foo"}])) {:id [:text "foo"]}))))
+    (t/is (= (sut/attrs (sut/conform [:div {:id "foo"}])) {:attr [[:id [:text "foo"]]]})))
+  (t/testing "event names are grouped separately"
+    (t/is (= (sut/attrs (sut/conform [:div {:id "a" :on-click [+]}]))
+             {:attr [[:id [:text "a"]]]
+              :event [[:on-click [:handler {:fn +}]]]}))))
+
+(t/deftest attr-type
+  (t/testing "an attr kw can be converted into it's type"
+    (t/is (= :event (sut/attr-type :on-click)))
+    (t/is (= :attr (sut/attr-type :id)))))
 
 (t/deftest voidness
   (t/testing "void? and real? detect void and not-void respectively"

@@ -170,6 +170,27 @@
       (sut/render! [:p {:class "yay"} "hi"] mount)
       (t/is (= "<p class=\"yay\">hi</p>" (.-innerHTML mount)))))
 
+  (t/testing "listeners can be added and triggered"
+    (let [mount (build-mount)
+          calls (atom 0)
+          f (fn [x] (swap! calls inc))]
+      (sut/render! [:div {:on-click [f "foo"]} "click me"] mount)
+      (t/is (= "<div>click me</div>" (.-innerHTML mount)))
+      (.click (.-firstChild mount))
+      (t/is (= @calls 1))
+      (.click (.-firstChild mount))
+      (t/is (= @calls 2))))
+
+  (t/testing "listeners can be removed"
+    (let [mount (build-mount)
+          calls (atom 0)
+          f (fn [x] (swap! calls inc))
+          prev (sut/render! [:div {:on-click [f "foo"]} "click me"] mount)]
+      (sut/render! prev [:div "click me"] mount)
+      (t/is (= "<div>click me</div>" (.-innerHTML mount)))
+      (.click (.-firstChild mount))
+      (t/is (= @calls 0))))
+
   (t/testing "migrated nodes carry attrs over"
     (let [mount (build-mount)
           prev (sut/render! [:p {:id "foo"} "hi"] mount)]

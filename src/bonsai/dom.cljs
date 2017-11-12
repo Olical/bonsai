@@ -35,13 +35,24 @@
   ([nas el]
    (render-attrs! nil nas el))
   ([pas nas el]
-   (doseq [attr-key (set (concat (keys pas) (keys nas)))]
-     (let [pa (get pas attr-key)
-           na (get nas attr-key)]
-       (cond
-         (= pa na) nil
-         (tree/void? na) (remove-attr! el attr-key)
-         (tree/real? na) (set-attr! el attr-key (second na)))))))
+   (let [pas (into {} (:attr pas))
+         nas (into {} (:attr nas))]
+     (doseq [attr-key (set (concat (keys pas) (keys nas)))]
+       (let [pa (get pas attr-key)
+             na (get nas attr-key)]
+         (cond
+           (= pa na) nil
+           (tree/void? na) (remove-attr! el attr-key)
+           (tree/real? na) (set-attr! el attr-key (second na))))))
+   #_(let [pas (into {} (:event pas))
+         nas (into {} (:event nas))]
+     (doseq [event-key (set (concat (keys pas) (keys nas)))]
+       (let [pa (get pas event-key)
+             na (get nas event-key)]
+         (cond
+           (= pa na) nil
+           (tree/void? na) (remove-listener! el event-key)
+           (tree/real? na) (add-listener! el event-key (second na))))))))
 
 (defn migrate! [host old [prev-type _ :as prev-tree] [type value :as tree]]
   (if (= prev-type type :text)

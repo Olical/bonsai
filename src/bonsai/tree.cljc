@@ -1,19 +1,23 @@
 (ns bonsai.tree
   (:require #?(:clj [clojure.spec.alpha :as s]
                :cljs [cljs.spec.alpha :as s])
-            [expound.alpha :as expound]))
+            [expound.alpha :as expound]
+            [clojure.string :as str]))
+
+(s/def ::fn-vec (s/and vector?
+                       (s/cat :fn fn?
+                              :args (s/* any?))))
 
 (s/def ::tree (s/or :void nil?
                     :text string?
-                    :node-fn (s/and vector?
-                                    (s/cat :fn fn?
-                                           :args (s/* any?)))
+                    :node-fn ::fn-vec
                     :node-seq (s/coll-of ::tree :kind seq?)
                     :node (s/and vector?
                                  (s/cat :name keyword?
                                         :attrs (s/? (s/map-of keyword?
                                                               (s/or :void nil?
-                                                                    :text string?)))
+                                                                    :text string?
+                                                                    :handler ::fn-vec)))
                                         :children (s/* ::tree)))))
 
 (defn conform [src]
@@ -39,11 +43,18 @@
     (assoc-in node [1 :children] children)
     node))
 
+(defn attr-type [kw]
+  (if (str/starts-with? (name kw) "on-")
+    :event
+    :attr))
+
 (defn attrs [[type value]]
-  (case type
-    :text nil
-    :node (:attrs value)
-    nil))
+  (->> (group-by
+        (comp attr-type first)
+        (case type
+          :text nil
+          :node (:attrs value)
+          nil))))
 
 (defn void? [[type _ :as node]]
   (or (nil? node) (= type :void)))
