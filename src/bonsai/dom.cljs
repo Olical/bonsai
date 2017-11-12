@@ -87,7 +87,7 @@
   (if (= prev-type type :text)
     (aset old "nodeValue" value)
     (let [el (tree->el (document old) tree)]
-      (render-attrs! (tree/attrs prev-tree) el)
+      (render-attrs! (tree/attrs tree) el)
       (.replaceChild host el old)
       (doseq [child (children old)]
         (.appendChild el child)))))
