@@ -191,6 +191,9 @@
       (.click (.-firstChild mount))
       (t/is (= @calls 0))))
 
+  ;; test the various add/remove states for events and params
+  ;; test the partial application aspect of events
+
   (t/testing "migrated nodes carry attrs over"
     (let [mount (build-mount)
           prev (sut/render! [:p {:id "foo"} "hi"] mount)]

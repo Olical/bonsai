@@ -49,12 +49,14 @@
     :attr))
 
 (defn attrs [[type value]]
-  (->> (group-by
-        (comp attr-type first)
-        (case type
-          :text nil
-          :node (:attrs value)
-          nil))))
+  (let [groups (group-by
+                (comp attr-type first)
+                (case type
+                  :text nil
+                  :node (:attrs value)
+                  nil))]
+    {:event (into {} (:event groups))
+     :attr (into {} (:attr groups))}))
 
 (defn void? [[type _ :as node]]
   (or (nil? node) (= type :void)))
