@@ -196,7 +196,25 @@
           prev (sut/render! [:p {:id "foo"} "hi"] mount)]
       (t/is (= "<p id=\"foo\">hi</p>" (.-innerHTML mount)))
       (sut/render! prev [:div {:id "foo"} "hi"] mount)
-      (t/is (= "<div id=\"foo\">hi</div>" (.-innerHTML mount)))))
+      (t/is (= "<div id=\"foo\">hi</div>" (.-innerHTML mount))))
+    (let [mount (build-mount)
+          calls (atom 0)
+          f (fn [] (swap! calls inc))
+          prev (sut/render! [:p {:on-click [f]} "hi"] mount)]
+      (.click (.-firstChild mount))
+      (t/is (= 1 @calls))
+      (sut/render! prev [:div {:on-click [f]} "hi"] mount)
+      (.click (.-firstChild mount))
+      (t/is (= 2 @calls)))
+    (let [mount (build-mount)
+          calls (atom 0)
+          f (fn [] (swap! calls inc))
+          prev (sut/render! [:p {:on-click [f]} "hi"] mount)]
+      (.click (.-firstChild mount))
+      (t/is (= 1 @calls))
+      (sut/render! prev [:div "hi"] mount)
+      (.click (.-firstChild mount))
+      (t/is (= 1 @calls))))
 
   (t/testing "functions are called in the tree"
     (let [mount (build-mount)
