@@ -183,8 +183,8 @@
   (t/testing "listeners can be added and triggered"
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [x] (swap! calls inc))]
-      (sut/render! [:div {:on-click [f "foo"]} "click me"] mount)
+          f (fn [_ x] (swap! calls x))]
+      (sut/render! [:div {:on-click [f inc]} "click me"] mount)
       (t/is (= "<div>click me</div>" (.-innerHTML mount)))
       (.click (.-firstChild mount))
       (t/is (= @calls 1))
@@ -194,8 +194,8 @@
   (t/testing "listeners can be removed"
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [x] (swap! calls inc))
-          prev (sut/render! [:div {:on-click [f "foo"]} "click me"] mount)]
+          f (fn [x] (swap! calls x))
+          prev (sut/render! [:div {:on-click [f inc]} "click me"] mount)]
       (sut/render! prev [:div "click me"] mount)
       (t/is (= "<div>click me</div>" (.-innerHTML mount)))
       (.click (.-firstChild mount))
@@ -209,17 +209,17 @@
       (t/is (= "<div id=\"foo\">hi</div>" (.-innerHTML mount))))
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [] (swap! calls inc))
-          prev (sut/render! [:p {:on-click [f]} "hi"] mount)]
+          f (fn [_ x] (swap! calls x))
+          prev (sut/render! [:p {:on-click [f inc]} "hi"] mount)]
       (.click (.-firstChild mount))
       (t/is (= 1 @calls))
-      (sut/render! prev [:div {:on-click [f]} "hi"] mount)
+      (sut/render! prev [:div {:on-click [f inc]} "hi"] mount)
       (.click (.-firstChild mount))
       (t/is (= 2 @calls)))
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [] (swap! calls inc))
-          prev (sut/render! [:p {:on-click [f]} "hi"] mount)]
+          f (fn [_ x] (swap! calls x))
+          prev (sut/render! [:p {:on-click [f inc]} "hi"] mount)]
       (.click (.-firstChild mount))
       (t/is (= 1 @calls))
       (sut/render! prev [:div "hi"] mount)
@@ -243,16 +243,16 @@
   (t/testing "functions are called when their inputs change (and only then)"
     (let [mount (build-mount)
           calls (atom 0)
-          with-args (fn [a] (swap! calls inc) [:p "with arg " a])
-          prev (sut/render! [:div [with-args "hi"] "!"] mount)]
+          with-args (fn [x a] (swap! calls x) [:p "with arg " a])
+          prev (sut/render! [:div [with-args inc "hi"] "!"] mount)]
       (t/is (= "<div><p>with arg hi</p>!</div>" (.-innerHTML mount)))
       (t/is (= @calls 1))
-      (let [prev (sut/render! prev [:div [with-args "hi"] "!"] mount)]
+      (let [prev (sut/render! prev [:div [with-args inc "hi"] "!"] mount)]
         (t/is (= "<div><p>with arg hi</p>!</div>" (.-innerHTML mount)))
         (t/is (= @calls 1))
-        (let [prev (sut/render! prev [:div [with-args "bye"] "!"] mount)]
+        (let [prev (sut/render! prev [:div [with-args inc "bye"] "!"] mount)]
           (t/is (= "<div><p>with arg bye</p>!</div>" (.-innerHTML mount)))
           (t/is (= @calls 2))
-          (sut/render! prev [:div [with-args "bye"] "!"] mount)
+          (sut/render! prev [:div [with-args inc "bye"] "!"] mount)
           (t/is (= "<div><p>with arg bye</p>!</div>" (.-innerHTML mount)))
           (t/is (= @calls 2)))))))
