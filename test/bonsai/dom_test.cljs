@@ -201,6 +201,32 @@
       (.click (.-firstChild mount))
       (t/is (= @calls 0))))
 
+  (t/testing "you can listen for insert / remove of the node (called just before it happens)"
+    (let [mount (build-mount)
+          calls (atom 0)
+          f (fn [x] (swap! calls x))
+          prev (sut/render! [:div "bloop"] mount)]
+      (t/is (= "<div>bloop</div>" (.-innerHTML mount)))
+      (t/is (= @calls 0))
+      (let [prev (sut/render! prev [:div "bloop" [:span {:on-insert [f inc]} "floop"]] mount)]
+        (t/is (= "<div>bloop<span>floop</span></div>" (.-innerHTML mount)))
+        (t/is (= @calls 1))
+        (sut/render! prev [:div "bloop" [:span {:on-insert [f inc]} "floop"] "gloop"] mount)
+        (t/is (= "<div>bloop<span>floop</span>gloop</div>" (.-innerHTML mount)))
+        (t/is (= @calls 1))))
+    (let [mount (build-mount)
+          calls (atom 0)
+          f (fn [x] (swap! calls x))
+          prev (sut/render! [:div "bloop" [:span {:on-remove [f inc]} "floop"] "gloop"] mount)]
+      (t/is (= "<div>bloop<span>floop</span>gloop</div>" (.-innerHTML mount)))
+      (t/is (= @calls 0))
+      (let [prev (sut/render! prev [:div "bloop" [:span {:on-remove [f inc]} "floop"]] mount)]
+        (t/is (= "<div>bloop<span>floop</span></div>" (.-innerHTML mount)))
+        (t/is (= @calls 0))
+        (sut/render! prev [:div "bloop"] mount)
+        (t/is (= "<div>bloop</div>" (.-innerHTML mount)))
+        (t/is (= @calls 1)))))
+
   (t/testing "migrated nodes carry attrs over"
     (let [mount (build-mount)
           prev (sut/render! [:p {:id "foo"} "hi"] mount)]

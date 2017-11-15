@@ -4,6 +4,8 @@
             [expound.alpha :as expound]
             [clojure.string :as str]))
 
+(def lifecycle-events #{:on-insert :on-remove})
+
 (s/def ::fn-vec (s/and vector?
                        (s/cat :fn fn?
                               :args (s/* any?))))
@@ -44,9 +46,10 @@
     node))
 
 (defn attr-type [kw]
-  (if (str/starts-with? (name kw) "on-")
-    :event
-    :attr))
+  (cond
+    (contains? lifecycle-events kw) :lifecycle
+    (str/starts-with? (name kw) "on-") :event
+    :else :attr))
 
 (defn attrs [[type value]]
   (let [groups (group-by
@@ -56,7 +59,8 @@
                   :node (:attrs value)
                   nil))]
     {:event (into {} (:event groups))
-     :attr (into {} (:attr groups))}))
+     :attr (into {} (:attr groups))
+     :lifecycle (into {} (:lifecycle groups))}))
 
 (defn void? [[type _ :as node]]
   (or (nil? node) (= type :void)))

@@ -56,18 +56,20 @@
 
 (t/deftest attrs
   (t/testing "attrs of things without attrs is nil"
-    (t/is (= (sut/attrs (sut/conform nil)) {:attr {} :event {}}))
-    (t/is (= (sut/attrs (sut/conform "hi")) {:attr {} :event {}}))
-    (t/is (= (sut/attrs (sut/conform [:div])) {:attr {} :event {}}))
-    (t/is (= (sut/attrs (sut/conform [+ "hi"])) {:attr {} :event {}})))
+    (t/is (= (sut/attrs (sut/conform nil)) {:attr {} :event {} :lifecycle {}}))
+    (t/is (= (sut/attrs (sut/conform "hi")) {:attr {} :event {} :lifecycle {}}))
+    (t/is (= (sut/attrs (sut/conform [:div])) {:attr {} :event {} :lifecycle {}}))
+    (t/is (= (sut/attrs (sut/conform [+ "hi"])) {:attr {} :event {} :lifecycle {}})))
   (t/testing "children of things with children is their children"
     (t/is (= (sut/attrs (sut/conform [:div {:id "foo"}]))
              {:attr {:id [:text "foo"]}
-              :event {}})))
-  (t/testing "event names are grouped separately"
-    (t/is (= (sut/attrs (sut/conform [:div {:id "a" :on-click [+]}]))
+              :event {}
+              :lifecycle {}})))
+  (t/testing "lifecycle hooks and event names are grouped separately"
+    (t/is (= (sut/attrs (sut/conform [:div {:id "a" :on-click [+] :on-insert [+]}]))
              {:attr {:id [:text "a"]}
-              :event {:on-click [:handler {:fn +}]}}))))
+              :event {:on-click [:handler {:fn +}]}
+              :lifecycle {:on-insert [:handler {:fn +}]}}))))
 
 (t/deftest attr-type
   (t/testing "an attr kw can be converted into it's type"
