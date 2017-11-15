@@ -49,6 +49,11 @@
   (t/testing "children of things with children is their children"
     (t/is (= (sut/children (sut/conform [:p "hi"])) [[:text "hi"]]))))
 
+(t/deftest with-children
+  (t/testing "assocs children if the node supports them"
+    (t/is (= (sut/conform "hi") (sut/with-children (sut/conform "hi") [(sut/conform "no")])))
+    (t/is (= (sut/conform [:p "yes"]) (sut/with-children (sut/conform [:p]) [(sut/conform "yes")])))))
+
 (t/deftest attrs
   (t/testing "attrs of things without attrs is nil"
     (t/is (= (sut/attrs (sut/conform nil)) {:attr {} :event {}}))
@@ -90,11 +95,6 @@
               (sut/conform "world")
               (sut/conform "!")
               (sut/conform "another")]))))
-
-(t/deftest with-children
-  (t/testing "assocs children if the node supports them"
-    (t/is (= (sut/conform "hi") (sut/with-children (sut/conform "hi") [(sut/conform "no")])))
-    (t/is (= (sut/conform [:p "yes"]) (sut/with-children (sut/conform [:p]) [(sut/conform "yes")])))))
 
 (t/deftest expand
   (t/testing "on things like :text, nothing happens"
