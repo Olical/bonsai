@@ -13,11 +13,17 @@
 (defn document [el]
   (.-ownerDocument el))
 
-(defn remove! [host el]
+(defn remove! [host el tree]
+  (let [handler (get-in (tree/attrs tree) [:lifecycle :on-remove 1])]
+    (when handler
+      (apply (:fn handler) (:args handler))))
   (.removeChild host el))
 
 (defn insert! [host ref-el tree]
-  (let [el (tree->el (document host) tree)]
+  (let [el (tree->el (document host) tree)
+        handler (get-in (tree/attrs tree) [:lifecycle :on-insert 1])]
+    (when handler
+      (apply (:fn handler) (:args handler)))
     (if ref-el
       (.insertBefore host el ref-el)
       (.appendChild host el))))
@@ -99,7 +105,7 @@
         (do
           (cond
             (= pv nx) nil
-            (and (tree/real? pv) (tree/void? nx)) (remove! host el)
+            (and (tree/real? pv) (tree/void? nx)) (remove! host el pv)
             (and (tree/void? pv) (tree/real? nx)) (insert! host el nx)
             (and (tree/real? pv) (tree/real? nx) (not= (tree/fingerprint pv) (tree/fingerprint nx))) (migrate! host el pv nx))
           (let [n (+ n (when (tree/void? nx) -1))
