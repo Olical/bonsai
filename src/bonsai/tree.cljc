@@ -62,6 +62,14 @@
      :attr (into {} (:attr groups))
      :lifecycle (into {} (:lifecycle groups))}))
 
+(defn apply-fn [{:keys [fn args]} & extra-args]
+  (apply fn (concat extra-args args)))
+
+(defn notify-lifecycle! [tree event]
+  (let [handler (get-in (attrs tree) [:lifecycle event 1])]
+    (when handler
+      (apply-fn handler))))
+
 (defn void? [[type _ :as node]]
   (or (nil? node) (= type :void)))
 
