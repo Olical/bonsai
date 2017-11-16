@@ -13,17 +13,18 @@
 (defn document [el]
   (.-ownerDocument el))
 
-(defn remove! [host el tree]
-  (let [handler (get-in (tree/attrs tree) [:lifecycle :on-remove 1])]
+(defn notify-lifecycle! [tree event]
+  (let [handler (get-in (tree/attrs tree) [:lifecycle event 1])]
     (when handler
-      (apply (:fn handler) (:args handler))))
+      (apply (:fn handler) (:args handler)))))
+
+(defn remove! [host el tree]
+  (notify-lifecycle! tree :on-remove)
   (.removeChild host el))
 
 (defn insert! [host ref-el tree]
-  (let [el (tree->el (document host) tree)
-        handler (get-in (tree/attrs tree) [:lifecycle :on-insert 1])]
-    (when handler
-      (apply (:fn handler) (:args handler)))
+  (notify-lifecycle! tree :on-insert)
+  (let [el (tree->el (document host) tree)]
     (if ref-el
       (.insertBefore host el ref-el)
       (.appendChild host el))))
@@ -89,9 +90,11 @@
     (aset old "nodeValue" value)
     (let [el (tree->el (document old) tree)]
       (render-attrs! (tree/attrs tree) el)
+      (notify-lifecycle! prev-tree :on-remove)
       (.replaceChild host el old)
       (doseq [child (children old)]
-        (.appendChild el child)))))
+        (.appendChild el child))
+      (notify-lifecycle! tree :on-insert))))
 
 (defn render-recur! [pvs nxs host]
   (loop [pvs pvs

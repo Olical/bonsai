@@ -227,6 +227,18 @@
         (t/is (= "<div>bloop</div>" (.-innerHTML mount)))
         (t/is (= @calls 1)))))
 
+  (t/testing "migrating is technically a remove and then an insert"
+    (let [mount (build-mount)
+          calls (atom [])
+          f (fn [x] (swap! calls conj x))
+          attrs {:on-insert [f :i] :on-remove [f :r]}
+          prev (sut/render! [:div attrs "hi"] mount)]
+      (t/is (= "<div>hi</div>" (.-innerHTML mount)))
+      (t/is (= @calls [:i]))
+      (sut/render! prev [:p attrs "hi"] mount)
+      (t/is (= "<p>hi</p>" (.-innerHTML mount)))
+      (t/is (= @calls [:i :r :i]))))
+
   (t/testing "migrated nodes carry attrs over"
     (let [mount (build-mount)
           prev (sut/render! [:p {:id "foo"} "hi"] mount)]
