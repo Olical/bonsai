@@ -5,6 +5,11 @@
             [clojure.string :as str]))
 
 (def lifecycle-events #{:on-insert :on-remove})
+(def on-keyword-re #"^on-.*")
+
+(defn on-keyword? [kw]
+  (boolean (when (keyword? kw)
+             (re-matches on-keyword-re (name kw)))))
 
 (s/def ::fn-vec (s/and vector?
                        (s/cat :fn fn?
@@ -16,10 +21,13 @@
                     :node-seq (s/coll-of ::tree :kind seq?)
                     :node (s/and vector?
                                  (s/cat :name keyword?
-                                        :attrs (s/? (s/map-of keyword?
-                                                              (s/or :void nil?
-                                                                    :text string?
-                                                                    :handler ::fn-vec)))
+                                        :attrs (s/? (s/every (s/or :lifecycle (s/tuple #{:on-insert :on-remove} (s/or :void nil?
+                                                                                                                      :fn ::fn-vec))
+                                                                   :handler (s/tuple on-keyword? (s/or :void nil?
+                                                                                                       :fn ::fn-vec))
+                                                                   :attr (s/tuple (complement on-keyword?) (s/or :void nil?
+                                                                                                                 :text string?)))
+                                                             :into {}))
                                         :children (s/* ::tree)))))
 
 (defn conform [src]
@@ -27,6 +35,8 @@
     (if (s/invalid? tree)
       (throw (#?(:clj Exception. :cljs js/Error.) (expound/expound-str ::tree src)))
       (into [] tree))))
+
+(conform [:p {:foo "bar" :on-insert "foo"}])
 
 (defn fingerprint [[type value :as node]]
   (case type
