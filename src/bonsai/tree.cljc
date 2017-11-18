@@ -7,6 +7,9 @@
 (def lifecycle-events #{:on-insert :on-remove})
 (def on-keyword-re #"^on-.*")
 
+(defn lifecycle-event? [kw]
+  (boolean (lifecycle-events kw)))
+
 (defn on-keyword? [kw]
   (boolean (when (keyword? kw)
              (re-matches on-keyword-re (name kw)))))
@@ -21,12 +24,9 @@
                     :node-seq (s/coll-of ::tree :kind seq?)
                     :node (s/and vector?
                                  (s/cat :name keyword?
-                                        :attrs (s/? (s/every (s/or :lifecycle (s/tuple #{:on-insert :on-remove} (s/or :void nil?
-                                                                                                                      :fn ::fn-vec))
-                                                                   :handler (s/tuple on-keyword? (s/or :void nil?
-                                                                                                       :fn ::fn-vec))
-                                                                   :attr (s/tuple (complement on-keyword?) (s/or :void nil?
-                                                                                                                 :text string?)))
+                                        :attrs (s/? (s/every (s/or :lifecycle (s/tuple lifecycle-event? (s/nilable ::fn-vec))
+                                                                   :handler (s/tuple on-keyword? (s/nilable ::fn-vec))
+                                                                   :attr (s/tuple keyword? (s/nilable string?)))
                                                              :into {}))
                                         :children (s/* ::tree)))))
 
@@ -36,49 +36,32 @@
       (throw (#?(:clj Exception. :cljs js/Error.) (expound/expound-str ::tree src)))
       (into [] tree))))
 
-(conform [:p {:foo "bar" :on-insert "foo"}])
-
 (defn fingerprint [[type value :as node]]
   (case type
     :text node
     :node-fn node
     :node [type (:name value)]))
 
-(defn children [[type value]]
-  (case type
-    :text nil
-    :node (:children value)
-    nil))
+(defn children [[_ value]]
+  (:children value))
 
 (defn with-children [[type _ :as node] children]
   (if (= type :node)
     (assoc-in node [1 :children] children)
     node))
 
-(defn attr-type [kw]
-  (cond
-    (contains? lifecycle-events kw) :lifecycle
-    (str/starts-with? (name kw) "on-") :event
-    :else :attr))
-
 (defn attrs [[type value]]
-  (let [groups (group-by
-                (comp attr-type first)
-                (case type
-                  :text nil
-                  :node (:attrs value)
-                  nil))]
-    {:event (into {} (:event groups))
-     :attr (into {} (:attr groups))
-     :lifecycle (into {} (:lifecycle groups))}))
+  (when (= type :node)
+    (:attrs value)))
 
 (defn apply-fn [{:keys [fn args]} & extra-args]
   (apply fn (concat extra-args args)))
 
 (defn notify-lifecycle! [tree event]
-  (let [handler (get-in (attrs tree) [:lifecycle event 1])]
+  (let [handler (get (attrs tree) event)]
     (when handler
-      (apply-fn handler))))
+      (apply-fn {:fn (first handler)
+                 :args (rest handler)}))))
 
 (defn void? [[type _ :as node]]
   (or (nil? node) (= type :void)))

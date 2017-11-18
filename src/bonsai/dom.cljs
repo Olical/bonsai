@@ -43,7 +43,8 @@
 (defn replace-listener! [el event-key event]
   (let [listeners (aget el listeners-key)
         old-f (event-key listeners)
-        new-f (fn [& args] (tree/apply-fn event args))
+        new-f (fn [& args] (tree/apply-fn {:fn (first event)
+                                           :args (rest event)} args))
         event-name (event-key->str event-key)]
     (when old-f
       (.removeEventListener el event-name old-f))
@@ -60,25 +61,19 @@
 (defn render-attrs!
   ([nas el]
    (render-attrs! nil nas el))
-  ([ps ns el]
-   (let [pas (:attr ps)
-         nas (:attr ns)]
-     (doseq [attr-key (set (concat (keys pas) (keys nas)))]
-       (let [pa (get pas attr-key)
-             na (get nas attr-key)]
-         (cond
-           (= pa na) nil
-           (and (tree/real? pa) (tree/void? na)) (remove-attr! el attr-key)
-           :else (replace-attr! el attr-key (second na))))))
-   (let [pes (:event ps)
-         nes (:event ns)]
-     (doseq [event-key (set (concat (keys pes) (keys nes)))]
-       (let [pe (get pes event-key)
-             ne (get nes event-key)]
-         (cond
-           (= pe ne) nil
-           (and (tree/real? pe) (tree/void? ne)) (remove-listener! el event-key)
-           :else (replace-listener! el event-key (second ne))))))))
+  ([pas nas el]
+   (doseq [attr-key (set (concat (keys pas) (keys nas)))]
+     (let [pa (get pas attr-key)
+           na (get nas attr-key)]
+       (cond
+         (= pa na) nil
+         (tree/lifecycle-event? attr-key) nil
+         (tree/on-keyword? attr-key) (cond
+                                       (and (tree/real? pa) (tree/void? na)) (remove-listener! el attr-key)
+                                       :else (replace-listener! el attr-key na))
+         :else (cond
+                 (and (tree/real? pa) (tree/void? na)) (remove-attr! el attr-key)
+                 :else (replace-attr! el attr-key na)))))))
 
 (defn migrate! [host old [prev-type _ :as prev-tree] [type value :as tree]]
   (if (= prev-type type :text)

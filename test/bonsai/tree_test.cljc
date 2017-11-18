@@ -14,10 +14,13 @@
                      :children [[:text "hi"]]}]
              (sut/conform [:p "hi"])))
     (t/is (= [:node {:name :p
-                     :attrs {:id [:text "foo"]
-                             :class [:void nil]}
+                     :attrs {:id "foo"
+                             :class nil}
                      :children [[:text "hi"]]}]
-             (sut/conform [:p {:id "foo" :class nil} "hi"]))))
+             (sut/conform [:p {:id "foo" :class nil} "hi"])))
+    (t/is (= [:node {:name :div
+                     :attrs {:on-click [+]}}]
+             (sut/conform [:div {:on-click [+]}]))))
   (t/testing "seqs of nodes are, well, seqs of nodes"
     (t/is (= [:node-seq '([:text "a"] [:text "b"] [:text "c"])]
              (sut/conform (map identity ["a" "b" "c"])))))
@@ -56,25 +59,17 @@
 
 (t/deftest attrs
   (t/testing "attrs of things without attrs is nil"
-    (t/is (= (sut/attrs (sut/conform nil)) {:attr {} :event {} :lifecycle {}}))
-    (t/is (= (sut/attrs (sut/conform "hi")) {:attr {} :event {} :lifecycle {}}))
-    (t/is (= (sut/attrs (sut/conform [:div])) {:attr {} :event {} :lifecycle {}}))
-    (t/is (= (sut/attrs (sut/conform [+ "hi"])) {:attr {} :event {} :lifecycle {}})))
-  (t/testing "children of things with children is their children"
-    (t/is (= (sut/attrs (sut/conform [:div {:id "foo"}]))
-             {:attr {:id [:text "foo"]}
-              :event {}
-              :lifecycle {}})))
-  (t/testing "lifecycle hooks and event names are grouped separately"
+    (t/is (= (sut/attrs (sut/conform nil)) nil))
+    (t/is (= (sut/attrs (sut/conform "hi")) nil))
+    (t/is (= (sut/attrs (sut/conform [:div])) nil))
+    (t/is (= (sut/attrs (sut/conform [+ "hi"])) nil)))
+  (t/testing "attrs of things with attrs is their attrs"
+    (t/is (= (sut/attrs (sut/conform [:div {:id "foo"}])) {:id "foo"})))
+  (t/testing "lifecycle hooks and event names are conformed with different rules"
     (t/is (= (sut/attrs (sut/conform [:div {:id "a" :on-click [+] :on-insert [+]}]))
-             {:attr {:id [:text "a"]}
-              :event {:on-click [:handler {:fn +}]}
-              :lifecycle {:on-insert [:handler {:fn +}]}}))))
-
-(t/deftest attr-type
-  (t/testing "an attr kw can be converted into it's type"
-    (t/is (= :event (sut/attr-type :on-click)))
-    (t/is (= :attr (sut/attr-type :id)))))
+             {:id "a"
+              :on-click [+]
+              :on-insert [+]}))))
 
 (t/deftest voidness
   (t/testing "void? and real? detect void and not-void respectively"
