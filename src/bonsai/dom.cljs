@@ -13,12 +13,12 @@
 (defn document [el]
   (.-ownerDocument el))
 
-(defn remove! [host el tree]
-  (tree/notify-lifecycle! tree :on-remove)
+(defn remove! [host el tree opts]
+  (tree/notify-lifecycle! tree :on-remove opts)
   (.removeChild host el))
 
-(defn insert! [host ref-el tree]
-  (tree/notify-lifecycle! tree :on-insert)
+(defn insert! [host ref-el tree opts]
+  (tree/notify-lifecycle! tree :on-insert opts)
   (let [el (tree->el (document host) tree)]
     (if ref-el
       (.insertBefore host el ref-el)
@@ -58,10 +58,7 @@
 (defn nth-child [el n]
   (nth (children el) n nil))
 
-(defn render-attrs!
-  ([nas el]
-   (render-attrs! nil nas el))
-  ([pas nas el]
+(defn render-attrs! [pas nas el opts]
    (doseq [attr-key (set (concat (keys pas) (keys nas)))]
      (let [pa (get pas attr-key)
            na (get nas attr-key)]
@@ -73,20 +70,20 @@
                                        :else (replace-listener! el attr-key na))
          :else (cond
                  (and (tree/real? pa) (tree/void? na)) (remove-attr! el attr-key)
-                 :else (replace-attr! el attr-key na)))))))
+                 :else (replace-attr! el attr-key na))))))
 
-(defn migrate! [host old [prev-type _ :as prev-tree] [type value :as tree]]
+(defn migrate! [host old [prev-type _ :as prev-tree] [type value :as tree] opts]
   (if (= prev-type type :text)
     (aset old "nodeValue" value)
     (let [el (tree->el (document old) tree)]
-      (render-attrs! (tree/attrs tree) el)
-      (tree/notify-lifecycle! prev-tree :on-remove)
+      (render-attrs! nil (tree/attrs tree) el opts)
+      (tree/notify-lifecycle! prev-tree :on-remove opts)
       (.replaceChild host el old)
       (doseq [child (children old)]
         (.appendChild el child))
-      (tree/notify-lifecycle! tree :on-insert))))
+      (tree/notify-lifecycle! tree :on-insert opts))))
 
-(defn render-recur! [pvs nxs host]
+(defn render-recur! [pvs nxs host opts]
   (loop [pvs pvs
          nxs (tree/flatten-seqs nxs)
          acc []
@@ -98,27 +95,25 @@
         (do
           (cond
             (= pv nx) nil
-            (and (tree/real? pv) (tree/void? nx)) (remove! host el pv)
-            (and (tree/void? pv) (tree/real? nx)) (insert! host el nx)
-            (and (tree/real? pv) (tree/real? nx) (not= (tree/fingerprint pv) (tree/fingerprint nx))) (migrate! host el pv nx))
+            (and (tree/real? pv) (tree/void? nx)) (remove! host el pv opts)
+            (and (tree/void? pv) (tree/real? nx)) (insert! host el nx opts)
+            (and (tree/real? pv) (tree/real? nx) (not= (tree/fingerprint pv) (tree/fingerprint nx))) (migrate! host el pv nx opts))
           (let [n (+ n (when (tree/void? nx) -1))
                 child-el (nth-child host n)
                 result (when (tree/real? nx)
-                         (render-attrs! (tree/attrs pv) (tree/attrs nx) child-el)
-                         (render-recur! (tree/children pv) (tree/children nx) child-el))]
+                         (render-attrs! (tree/attrs pv) (tree/attrs nx) child-el opts)
+                         (render-recur! (tree/children pv) (tree/children nx) child-el opts))]
             (recur (rest pvs)
                    (rest nxs)
                    (conj acc (tree/with-children nx result))
                    (inc n))))
         acc))))
 
-(defn render!
-  ([nx-src host]
-   (render! nil nx-src host))
-  ([pv nx-src host]
+(defn render! [pv nx-src host opts]
    (let [nx (tree/conform nx-src)]
      (render-recur! pv
                     (if (seq? nx)
                       nx
                       (list nx))
-                    host))))
+                    host
+                    opts)))

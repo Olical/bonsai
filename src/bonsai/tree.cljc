@@ -57,11 +57,12 @@
 (defn apply-fn [{:keys [fn args]} & extra-args]
   (apply fn (concat extra-args args)))
 
-(defn notify-lifecycle! [tree event]
+(defn notify-lifecycle! [tree event opts]
   (let [handler (get (attrs tree) event)]
     (when handler
       (apply-fn {:fn (first handler)
-                 :args (rest handler)}))))
+                 :args (cond-> (rest handler)
+                         (contains? opts :state) (conj (:state opts)))}))))
 
 (defn void? [[type _ :as node]]
   (or (nil? node) (= type :void)))

@@ -123,4 +123,9 @@
 (t/deftest notify-lifecycle!
   (t/testing "calls the correct lifecycle hook"
     (t/is (= :yep (sut/notify-lifecycle!
-                   (sut/conform [:p {:on-insert [(constantly :yep)]}]) :on-insert)))))
+                   (sut/conform [:p {:on-insert [identity :yep]}]) :on-insert {}))))
+  (t/testing "passes any state through as the first arg"
+    (t/is (= [:foo :bar] (sut/notify-lifecycle!
+                          (sut/conform [:p {:on-insert [vector :bar]}]) :on-insert {:state :foo})))))
+
+
