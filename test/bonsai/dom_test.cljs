@@ -189,7 +189,13 @@
       (.click (.-firstChild mount))
       (t/is (= @calls 1))
       (.click (.-firstChild mount))
-      (t/is (= @calls 2))))
+      (t/is (= @calls 2)))
+    (let [mount (build-mount)
+          calls (atom [])
+          f (fn [e & args] (swap! calls conj [(-> e .-target .-nodeName) args]))]
+      (sut/render! nil [:div {:on-click [f 1 2 3]} "click me"] mount {})
+      (.click (.-firstChild mount))
+      (t/is (= @calls [["DIV" [1 2 3]]]))))
 
   (t/testing "listeners can be removed"
     (let [mount (build-mount)

@@ -113,19 +113,3 @@
       (t/is (= @calls 1))
       (t/is (= (sut/expand prev (sut/conform [f "bar"])) (sut/conform [:p "hi " "bar"])))
       (t/is (= @calls 2)))))
-
-(t/deftest apply-fn
-  (t/testing "calls fns"
-    (t/is (= :foo (sut/apply-fn {:fn identity :args [:foo]}))))
-  (t/testing "can take extra args"
-    (t/is (= [:a :b :c :d] (sut/apply-fn {:fn vector :args [:c :d]} :a :b)))))
-
-(t/deftest notify-lifecycle!
-  (t/testing "calls the correct lifecycle hook"
-    (t/is (= :yep (sut/notify-lifecycle!
-                   (sut/conform [:p {:on-insert [identity :yep]}]) :on-insert {}))))
-  (t/testing "passes any state through as the first arg"
-    (t/is (= [:foo :bar] (sut/notify-lifecycle!
-                          (sut/conform [:p {:on-insert [vector :bar]}]) :on-insert {:state :foo})))))
-
-
