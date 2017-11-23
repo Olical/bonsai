@@ -313,4 +313,12 @@
       (-> (sut/render! nil [:div {:on-insert [f 0]
                                   :on-remove [f 1]}] mount {:state :foo})
           (sut/render! [:p] mount {:state :bar}))
-      (t/is (= @states [[0 :foo] [1 :bar]])))))
+      (t/is (= @states [[0 :foo] [1 :bar]])))
+    (let [mount (build-mount)
+          states (atom [])
+          f (fn [state e n] (swap! states conj [n (-> e .-target .-nodeName) state]))
+          prev (sut/render! nil [:div {:on-click [f 0]}] mount {:state :foo})]
+      (.click (.-firstChild mount))
+      (sut/render! prev [:div {:on-click [f 1]}] mount {:state :bar})
+      (.click (.-firstChild mount))
+      (t/is (= @states [[0 "DIV" :foo] [1 "DIV" :bar]])))))
