@@ -48,13 +48,13 @@
     (.removeEventListener el event-name f)
     (aset el listeners-key (dissoc listeners event-key))))
 
-(defn replace-listener! [el event-key event opts]
+(defn replace-listener! [el event-key event {:keys [host] :as opts}]
   (let [listeners (aget el listeners-key)
         old-f (event-key listeners)
         new-f (fn [ev] (apply (first event)
                               (cond-> (rest event)
                                 ev (conj ev)
-                                (contains? opts :state) (conj (aget (:host opts) state-key)))))
+                                (.hasOwnProperty host state-key) (conj (aget host state-key)))))
         event-name (event-key->str event-key)]
     (when old-f
       (.removeEventListener el event-name old-f))
@@ -121,8 +121,9 @@
 
 (defn render! [pv nx-src host opts]
    (let [nx (tree/conform nx-src)]
-     (when (contains? opts :state)
-       (aset host state-key (:state opts)))
+     (if (contains? opts :state)
+       (aset host state-key (:state opts))
+       (js-delete host state-key))
      (render-recur! pv
                     (if (seq? nx)
                       nx

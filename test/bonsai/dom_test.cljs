@@ -321,4 +321,15 @@
       (.click (.-firstChild mount))
       (sut/render! prev [:div {:on-click [f 1]}] mount {:state :bar})
       (.click (.-firstChild mount))
-      (t/is (= @states [[0 "DIV" :foo] [1 "DIV" :bar]])))))
+      (t/is (= @states [[0 "DIV" :foo] [1 "DIV" :bar]])))
+    (let [mount (build-mount)
+          calls (atom [])
+          maybe-node-name (fn [e] (if (.-target e) (-> e .-target .-nodeName) e))
+          f (fn [& args] (swap! calls conj (map maybe-node-name args)))
+          prev (sut/render! nil [:div {:on-click [f 0]}] mount {})]
+      (.click (.-firstChild mount))
+      (let [prev (sut/render! prev [:div {:on-click [f 0]}] mount {:state :foo})]
+        (.click (.-firstChild mount))
+        (sut/render! prev [:div {:on-click [f 0]}] mount {})
+        (.click (.-firstChild mount))
+        (t/is (= @calls [["DIV" 0] [:foo "DIV" 0] ["DIV" 0]]))))))
