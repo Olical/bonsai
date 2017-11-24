@@ -14,9 +14,11 @@
 (defn document [el]
   (.-ownerDocument el))
 
-(defn apply-listener [tree key opts]
+(defn apply-listener [tree key {:keys [state on-change]}]
   (when-let [listener (key (tree/attrs tree))]
-    (apply (first listener) (:state opts) (rest listener))))
+    (let [result (apply (first listener) state (rest listener))]
+      (when (and on-change (not= state result))
+        (on-change result)))))
 
 (defn remove! [host el tree opts]
   (apply-listener tree :on-remove opts)
@@ -49,8 +51,10 @@
   (let [listeners (aget el listeners-key)
         old-f (event-key listeners)
         new-f (fn [ev]
-                (let [opts (aget host opts-key)]
-                  (apply (first event) (:state opts) ev (rest event))))
+                (let [{:keys [state on-change]} (aget host opts-key)
+                      result (apply (first event) state ev (rest event))]
+                  (when (and on-change (not= state result))
+                    (on-change result))))
         event-name (event-key->str event-key)]
     (when old-f
       (.removeEventListener el event-name old-f))

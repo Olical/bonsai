@@ -334,15 +334,21 @@
         (.click (.-firstChild mount))
         (t/is (= @calls [[nil "DIV" 0] [:foo "DIV" 0] [nil "DIV" 0]])))))
 
-  #_(t/testing "if given an on-state-change handler, it is called with new states"
+  (t/testing "the change handler is called with the updated state if it changed"
     (let [mount (build-mount)
           calls (atom [])
-          f (fn [state] (inc state))
-          osc (fn [state] (swap! calls assoc state))
-          prev (sut/render! nil [:div {:on-click [f]}] mount {:state 0
-                                                              :on-state-changed osc})]
+          f (fn [state _ x] (x state))
+          change (fn [state] (swap! calls conj state))
+          prev (sut/render! nil [:div {:on-click [f inc]}] mount {:state 0, :on-change change})]
       (t/is (= @calls []))
       (.click (.-firstChild mount))
       (t/is (= @calls [1]))
-      (.click (.-firstChild mount))
-      (t/is (= @calls [1 2])))))
+      (let [prev (sut/render! prev [:div {:on-click [f inc]}] mount {:state 1, :on-change change})]
+        (.click (.-firstChild mount))
+        (t/is (= @calls [1 2]))))
+    (let [mount (build-mount)
+          calls (atom [])
+          f (fn [state x] (x state))
+          change (fn [state] (swap! calls conj state))]
+      (sut/render! nil [:div {:on-insert [f inc]}] mount {:state 0, :on-change change})
+      (t/is (= @calls [1])))))
