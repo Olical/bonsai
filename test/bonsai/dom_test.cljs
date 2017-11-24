@@ -375,4 +375,12 @@
         (t/is (= @calls [["Hello, " "World!"] ["Hey, " "World!"]]))
         (sut/render! prev [node-fn "World!"] mount {:state {:pre "Hey, ", :other :bar}})
         (t/is (= "<p>Hey, World!</p>" (.-innerHTML mount)))
-        (t/is (= @calls [["Hello, " "World!"] ["Hey, " "World!"]]))))))
+        (t/is (= @calls [["Hello, " "World!"] ["Hey, " "World!"]])))))
+
+   (t/testing "deep node-fns are updated, even when it's just the state that changed"
+    (let [mount (build-mount)
+          node-fn (with-meta (fn [state] [:p state]) {:state :myval})
+          prev (sut/render! nil [:div [node-fn]] mount {:state {:myval "FOO"}})]
+      (t/is (= "<div><p>FOO</p></div>" (.-innerHTML mount)))
+      (sut/render! prev [:div [node-fn]] mount {:state {:myval "BAR"}})
+      (t/is (= "<div><p>BAR</p></div>" (.-innerHTML mount))))))
