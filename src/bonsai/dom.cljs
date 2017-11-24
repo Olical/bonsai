@@ -4,8 +4,7 @@
             [clojure.string :as str]))
 
 (defonce listeners-key (gensym "bonsai-listeners"))
-(defonce state-key (gensym "bonsai-state"))
-
+(defonce opts-key (gensym "bonsai-opts"))
 
 (defn tree->el [document [type value :as tree]]
   (case type
@@ -48,13 +47,15 @@
     (.removeEventListener el event-name f)
     (aset el listeners-key (dissoc listeners event-key))))
 
-(defn replace-listener! [el event-key event {:keys [host] :as opts}]
+(defn replace-listener! [el event-key event {:keys [host]}]
   (let [listeners (aget el listeners-key)
         old-f (event-key listeners)
-        new-f (fn [ev] (apply (first event)
-                              (cond-> (rest event)
-                                ev (conj ev)
-                                (.hasOwnProperty host state-key) (conj (aget host state-key)))))
+        new-f (fn [ev]
+                (let [opts (aget host opts-key)]
+                  (apply (first event)
+                         (cond-> (rest event)
+                           ev (conj ev)
+                           (contains? opts :state) (conj (:state opts))))))
         event-name (event-key->str event-key)]
     (when old-f
       (.removeEventListener el event-name old-f))
@@ -121,9 +122,7 @@
 
 (defn render! [pv nx-src host opts]
    (let [nx (tree/conform nx-src)]
-     (if (contains? opts :state)
-       (aset host state-key (:state opts))
-       (js-delete host state-key))
+     (aset host opts-key opts)
      (render-recur! pv
                     (if (seq? nx)
                       nx
