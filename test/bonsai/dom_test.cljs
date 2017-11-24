@@ -383,4 +383,10 @@
           prev (sut/render! nil [:div [node-fn]] mount {:state {:myval "FOO"}})]
       (t/is (= "<div><p>FOO</p></div>" (.-innerHTML mount)))
       (sut/render! prev [:div [node-fn]] mount {:state {:myval "BAR"}})
-      (t/is (= "<div><p>BAR</p></div>" (.-innerHTML mount))))))
+      (t/is (= "<div><p>BAR</p></div>" (.-innerHTML mount))))
+    (let [mount (build-mount)
+          node-fn (with-meta (fn [state] [:p state]) {:state :myval})
+          prev (sut/render! nil [:ul [:li "boop"] [:li [:div [node-fn]]]] mount {:state {:myval "FOO"}})]
+      (t/is (= "<ul><li>boop</li><li><div><p>FOO</p></div></li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul [:li "boop"] [:li [:div [node-fn]]]] mount {:state {:myval "BAR"}})
+      (t/is (= "<ul><li>boop</li><li><div><p>BAR</p></div></li></ul>" (.-innerHTML mount))))))
