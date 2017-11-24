@@ -95,21 +95,25 @@
 
 (t/deftest expand
   (t/testing "on things like :text, nothing happens"
-    (t/is (= (sut/expand (sut/conform "hi")) (sut/conform "hi"))))
+    (t/is (= (sut/expand nil (sut/conform "hi") {}) (sut/conform "hi"))))
   (t/testing "on node-fns, they are applied and the result is returned"
     (let [f (fn [a] [:p "hi " a])]
-      (t/is (= (sut/expand (sut/conform [f "foo"])) (sut/conform [:p "hi " "foo"])))))
+      (t/is (= (sut/expand nil (sut/conform [f "foo"]) {}) (sut/conform [:p "hi " "foo"])))))
   (t/testing "the args are encoded in the meta"
     (let [f (fn [a] [:p "hi " a])]
       (t/is (= {:bonsai.tree/node-fn {:fn f :args ["foo"]}}
-               (meta (sut/expand (sut/conform [f "foo"])))))))
+               (meta (sut/expand nil (sut/conform [f "foo"]) {}))))))
   (t/testing "if prev is provided, it will use that if the meta is the same"
     (let [calls (atom 0)
           f (fn [a] (swap! calls inc) [:p "hi " a])
-          prev (sut/expand (sut/conform [f "foo"]))]
+          prev (sut/expand nil (sut/conform [f "foo"]) {})]
       (t/is (= prev (sut/conform [:p "hi " "foo"])))
       (t/is (= @calls 1))
-      (t/is (= (sut/expand prev (sut/conform [f "foo"])) (sut/conform [:p "hi " "foo"])))
+      (t/is (= (sut/expand prev (sut/conform [f "foo"]) {}) (sut/conform [:p "hi " "foo"])))
       (t/is (= @calls 1))
-      (t/is (= (sut/expand prev (sut/conform [f "bar"])) (sut/conform [:p "hi " "bar"])))
-      (t/is (= @calls 2)))))
+      (t/is (= (sut/expand prev (sut/conform [f "bar"]) {}) (sut/conform [:p "hi " "bar"])))
+      (t/is (= @calls 2))))
+  (t/testing "when node-fns have :state meta, they take the opts :state into account"
+    (let [f (with-meta (fn [state x] [:p (str state x)]) {:state :foo})]
+      (t/is (= (sut/expand nil (sut/conform [f "World!"]) {:state {:foo "Hello, "}})
+               (sut/conform [:p "Hello, World!"]))))))

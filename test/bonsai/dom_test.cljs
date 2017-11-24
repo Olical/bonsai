@@ -351,4 +351,28 @@
           f (fn [state x] (x state))
           change (fn [state] (swap! calls conj state))]
       (sut/render! nil [:div {:on-insert [f inc]}] mount {:state 0, :on-change change})
-      (t/is (= @calls [1])))))
+      (t/is (= @calls [1]))))
+
+  (t/testing "nodes that request state are provided it as their first argument"
+    (let [mount (build-mount)
+          node-fn (with-meta (fn [state post] [:p (str state post)]) {:state :pre})]
+      (sut/render! nil [node-fn "World!"] mount {:state {:pre "Hello, "}})
+      (t/is (= "<p>Hello, World!</p>" (.-innerHTML mount)))))
+
+  (t/testing "nodes with state are only called when that required sub-state changes"
+    (let [mount (build-mount)
+          calls (atom [])
+          node-fn (with-meta
+                    (fn [state post]
+                      (swap! calls conj [state post])
+                      [:p (str state post)])
+                    {:state :pre})
+          prev (sut/render! nil [node-fn "World!"] mount {:state {:pre "Hello, ", :other :foo}})]
+      (t/is (= "<p>Hello, World!</p>" (.-innerHTML mount)))
+      (t/is (= @calls [["Hello, " "World!"]]))
+      (let [prev (sut/render! prev [node-fn "World!"] mount {:state {:pre "Hey, ", :other :foo}})]
+        (t/is (= "<p>Hey, World!</p>" (.-innerHTML mount)))
+        (t/is (= @calls [["Hello, " "World!"] ["Hey, " "World!"]]))
+        (sut/render! prev [node-fn "World!"] mount {:state {:pre "Hey, ", :other :bar}})
+        (t/is (= "<p>Hey, World!</p>" (.-innerHTML mount)))
+        (t/is (= @calls [["Hello, " "World!"] ["Hey, " "World!"]]))))))
