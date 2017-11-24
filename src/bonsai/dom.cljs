@@ -16,9 +16,7 @@
 
 (defn apply-listener [tree key opts]
   (when-let [listener (key (tree/attrs tree))]
-    (apply (first listener)
-           (cond-> (rest listener)
-             (contains? opts :state) (conj (:state opts))))))
+    (apply (first listener) (:state opts) (rest listener))))
 
 (defn remove! [host el tree opts]
   (apply-listener tree :on-remove opts)
@@ -52,10 +50,7 @@
         old-f (event-key listeners)
         new-f (fn [ev]
                 (let [opts (aget host opts-key)]
-                  (apply (first event)
-                         (cond-> (rest event)
-                           ev (conj ev)
-                           (contains? opts :state) (conj (:state opts))))))
+                  (apply (first event) (:state opts) ev (rest event))))
         event-name (event-key->str event-key)]
     (when old-f
       (.removeEventListener el event-name old-f))

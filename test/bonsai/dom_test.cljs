@@ -183,7 +183,7 @@
   (t/testing "listeners can be added and triggered"
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [_ x] (swap! calls x))]
+          f (fn [_ _ x] (swap! calls x))]
       (sut/render! nil [:div {:on-click [f inc]} "click me"] mount {})
       (t/is (= "<div>click me</div>" (.-innerHTML mount)))
       (.click (.-firstChild mount))
@@ -192,7 +192,7 @@
       (t/is (= @calls 2)))
     (let [mount (build-mount)
           calls (atom [])
-          f (fn [e & args] (swap! calls conj [(-> e .-target .-nodeName) args]))]
+          f (fn [_ e & args] (swap! calls conj [(-> e .-target .-nodeName) args]))]
       (sut/render! nil [:div {:on-click [f 1 2 3]} "click me"] mount {})
       (.click (.-firstChild mount))
       (t/is (= @calls [["DIV" [1 2 3]]]))))
@@ -200,7 +200,7 @@
   (t/testing "listeners can be removed"
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [x] (swap! calls x))
+          f (fn [_ x] (swap! calls x))
           prev (sut/render! nil [:div {:on-click [f inc]} "click me"] mount {})]
       (sut/render! prev [:div "click me"] mount {})
       (t/is (= "<div>click me</div>" (.-innerHTML mount)))
@@ -210,7 +210,7 @@
   (t/testing "you can listen for insert / remove of the node (called just before it happens)"
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [x] (swap! calls x))
+          f (fn [_ x] (swap! calls x))
           prev (sut/render! nil [:div "bloop"] mount {})]
       (t/is (= "<div>bloop</div>" (.-innerHTML mount)))
       (t/is (= @calls 0))
@@ -222,7 +222,7 @@
         (t/is (= @calls 1))))
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [x] (swap! calls x))
+          f (fn [_ x] (swap! calls x))
           prev (sut/render! nil [:div "bloop" [:span {:on-remove [f inc]} "floop"] "gloop"] mount {})]
       (t/is (= "<div>bloop<span>floop</span>gloop</div>" (.-innerHTML mount)))
       (t/is (= @calls 0))
@@ -236,7 +236,7 @@
   (t/testing "migrating is technically a remove and then an insert"
     (let [mount (build-mount)
           calls (atom [])
-          f (fn [x] (swap! calls conj x))
+          f (fn [_ x] (swap! calls conj x))
           attrs {:on-insert [f :i] :on-remove [f :r]}
           prev (sut/render! nil [:div attrs "hi"] mount {})]
       (t/is (= "<div>hi</div>" (.-innerHTML mount)))
@@ -253,7 +253,7 @@
       (t/is (= "<div id=\"foo\">hi</div>" (.-innerHTML mount))))
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [_ x] (swap! calls x))
+          f (fn [_ _ x] (swap! calls x))
           prev (sut/render! nil [:p {:on-click [f inc]} "hi"] mount {})]
       (.click (.-firstChild mount))
       (t/is (= 1 @calls))
@@ -262,7 +262,7 @@
       (t/is (= 2 @calls)))
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [_ x] (swap! calls x))
+          f (fn [_ _ x] (swap! calls x))
           prev (sut/render! nil [:p {:on-click [f inc]} "hi"] mount {})]
       (.click (.-firstChild mount))
       (t/is (= 1 @calls))
@@ -304,7 +304,7 @@
   (t/testing "listeners are provided with the state"
     (let [mount (build-mount)
           states (atom [])
-          f (fn [n hopefully-nil] (swap! states conj [n hopefully-nil]))]
+          f (fn [_ n hopefully-nil] (swap! states conj [n hopefully-nil]))]
       (sut/render! nil [:div {:on-insert [f 0]}] mount {})
       (t/is (= @states [[0 nil]])))
     (let [mount (build-mount)
@@ -324,7 +324,7 @@
       (t/is (= @states [[0 "DIV" :foo] [1 "DIV" :bar]])))
     (let [mount (build-mount)
           calls (atom [])
-          maybe-node-name (fn [e] (if (.-target e) (-> e .-target .-nodeName) e))
+          maybe-node-name (fn [e] (if (and e (.-target e)) (-> e .-target .-nodeName) e))
           f (fn [& args] (swap! calls conj (map maybe-node-name args)))
           prev (sut/render! nil [:div {:on-click [f 0]}] mount {})]
       (.click (.-firstChild mount))
@@ -332,7 +332,7 @@
         (.click (.-firstChild mount))
         (sut/render! prev [:div {:on-click [f 0]}] mount {})
         (.click (.-firstChild mount))
-        (t/is (= @calls [["DIV" 0] [:foo "DIV" 0] ["DIV" 0]])))))
+        (t/is (= @calls [[nil "DIV" 0] [:foo "DIV" 0] [nil "DIV" 0]])))))
 
   #_(t/testing "if given an on-state-change handler, it is called with new states"
     (let [mount (build-mount)
