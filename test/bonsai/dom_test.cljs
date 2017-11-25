@@ -377,7 +377,16 @@
         (t/is (= "<p>Hey, World!</p>" (.-innerHTML mount)))
         (t/is (= @calls [["Hello, " "World!"] ["Hey, " "World!"]])))))
 
-   (t/testing "deep node-fns are updated, even when it's just the state that changed"
+   (t/testing "as long as some argument changes, the fn is re-rendered"
+    (let [mount (build-mount)
+          node-fn (with-meta (fn [state] [:p state]) {:state :myval})
+          wrapper-node-fn (fn [child] [:div "Wrapped: " child])
+          prev (sut/render! nil [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn :a]]]] mount {:state {:myval "FOO"}})]
+      (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>FOO</p></div></li></ul>" (.-innerHTML mount)))
+      (sut/render! prev [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn :b]]]] mount {:state {:myval "BAR"}})
+      (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>BAR</p></div></li></ul>" (.-innerHTML mount)))))
+
+  (t/testing "deep node-fns are updated, even when it's just the state that changed"
     (let [mount (build-mount)
           node-fn (with-meta (fn [state] [:p state]) {:state :myval})
           prev (sut/render! nil [:div [node-fn]] mount {:state {:myval "FOO"}})]

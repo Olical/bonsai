@@ -69,11 +69,16 @@
       acc)))
 
 (defn expand [pv [type {:keys [fn args] :as nx} :as node] {:keys [state] :as opts}]
-   (if (= type :node-fn)
-     (let [state-fn (:state (meta fn))
-           nx (cond-> nx
-                state-fn (assoc :args (into [(state-fn state)] args)))]
-       (if (= (::node-fn (meta pv)) nx)
-         pv
-         (with-meta (conform (apply fn (:args nx))) {::node-fn nx})))
-     node))
+  (let [node-fn (-> node meta ::node-fn)]
+    (if (or (= type :node-fn) node-fn)
+      (let [state-fn (or (:state (meta fn)) (-> node-fn :fn meta :state))
+            nx (cond-> nx
+                 state-fn (assoc :state (state-fn state)))
+            fn (or fn (:fn node-fn))]
+        (if (= (::node-fn (meta pv)) nx)
+          pv
+          (with-meta
+            (conform (apply fn (cond->> (:args nx)
+                                 state-fn (into [(:state nx)]))))
+            {::node-fn nx})))
+      node)))
