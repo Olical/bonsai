@@ -74,11 +74,12 @@
       (let [state-fn (or (:state (meta fn)) (-> node-fn :fn meta :state))
             nx (cond-> nx
                  state-fn (assoc :state (state-fn state)))
-            fn (or fn (:fn node-fn))]
+            fn (or fn (:fn node-fn))
+            args (or args (:args node-fn))]
         (if (= (::node-fn (meta pv)) nx)
           pv
           (with-meta
-            (conform (apply fn (cond->> (:args nx)
+            (conform (apply fn (cond->> args
                                  state-fn (into [(:state nx)]))))
             {::node-fn nx})))
       node)))
