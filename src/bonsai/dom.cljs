@@ -128,3 +128,15 @@
                       (list nx))
                     host
                     (assoc opts :host host))))
+
+(defn mount!
+  ([tree host]
+   (mount! tree host nil))
+  ([tree host state]
+   (let [next-tree (atom nil)
+         on-change (fn [next-state on-change]
+                     (swap! next-tree
+                            (fn [prev-tree]
+                              (render! prev-tree tree host {:state next-state
+                                                            :on-change #(on-change % on-change)}))))]
+     (on-change state on-change))))

@@ -406,3 +406,40 @@
       (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>FOO</p></div></li></ul>" (.-innerHTML mount)))
       (sut/render! prev [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn]]]] mount {:state {:myval "BAR"}})
       (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>BAR</p></div></li></ul>" (.-innerHTML mount))))))
+
+(t/deftest mount!
+  (t/testing "mounting a static tree is the same as rendering"
+    (let [mount (build-mount)]
+      (sut/mount! [:p "Hi, Bonsai!"] mount)
+      (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))))
+  (t/testing "state can be rendered"
+    (let [mount (build-mount)
+          f (with-meta
+              (fn [name greeting]
+                [:p greeting ", " name "!"])
+              {:state :name})]
+      (sut/mount! [f "Hey"] mount {:name "Bonsai"})
+      (t/is (= "<p>Hey, Bonsai!</p>" (.-innerHTML mount)))))
+  (t/testing "events that change the state cause re-renders"
+    (let [mount (build-mount)
+          inc-counter (fn [state] (update state :counter inc))
+          f (with-meta
+              (fn [counter]
+                [:p {:on-click [inc-counter]} (str counter)])
+              {:state :counter})]
+      (sut/mount! [f] mount {:counter 0})
+      (t/is (= "<p>0</p>" (.-innerHTML mount)))
+      (.click (.-firstChild mount))
+      (t/is (= "<p>1</p>" (.-innerHTML mount)))
+      (.click (.-firstChild mount))
+      (t/is (= "<p>2</p>" (.-innerHTML mount))))
+    ;; Exceeds max call stack.
+    #_(let [mount (build-mount)
+          inc-counter (fn [state] (update state :counter inc))
+          f (with-meta
+              (fn [counter]
+                [:p {:on-insert [inc-counter]} (str counter)])
+              {:state :counter})]
+      (sut/mount! [f] mount {:counter 0})
+      (t/is (= "<p>0</p>" (.-innerHTML mount)))
+      (t/is (= "<p>1</p>" (.-innerHTML mount))))))
