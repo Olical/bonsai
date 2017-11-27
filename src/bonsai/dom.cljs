@@ -68,18 +68,18 @@
   (nth (children el) n nil))
 
 (defn render-attrs! [pas nas el opts]
-   (doseq [attr-key (set (concat (keys pas) (keys nas)))]
-     (let [pa (get pas attr-key)
-           na (get nas attr-key)]
-       (cond
-         (= pa na) nil
-         (tree/lifecycle-event? attr-key) nil
-         (tree/on-keyword? attr-key) (cond
-                                       (and (tree/real? pa) (tree/void? na)) (remove-listener! el attr-key)
-                                       :else (replace-listener! el attr-key na opts))
-         :else (cond
-                 (and (tree/real? pa) (tree/void? na)) (remove-attr! el attr-key)
-                 :else (replace-attr! el attr-key na))))))
+  (doseq [attr-key (set (concat (keys pas) (keys nas)))]
+    (let [pa (get pas attr-key)
+          na (get nas attr-key)]
+      (cond
+        (= pa na) nil
+        (tree/lifecycle-event? attr-key) nil
+        (tree/on-keyword? attr-key) (cond
+                                      (and (tree/real? pa) (tree/void? na)) (remove-listener! el attr-key)
+                                      :else (replace-listener! el attr-key na opts))
+        :else (cond
+                (and (tree/real? pa) (tree/void? na)) (remove-attr! el attr-key)
+                :else (replace-attr! el attr-key na))))))
 
 (defn migrate! [host old [prev-type _ :as prev-tree] [type value :as tree] opts]
   (if (= prev-type type :text)
@@ -136,20 +136,23 @@
       (on-change next-state))
     result))
 
-(defn mount!
-  ([tree host]
-   (mount! tree host nil))
-  ([tree host state]
-   (let [next-tree (atom nil)
-         iter (fn [next-state on-change]
-                (swap! next-tree
-                       (fn [prev-tree]
-                         (render! prev-tree
-                                  tree
-                                  host
-                                  {:state next-state
-                                   :on-change (fn [next-state]
-                                                (js/setTimeout
-                                                 #(on-change next-state on-change)
-                                                 1))}))))]
-     (iter state iter))))
+(def request-animation-frame
+  (if (exists? js/window)
+    #(.requestAnimationFrame js/window %)
+    #(js/setTimeout % 0)))
+
+(defn mount-iter! [prev-tree tree host state on-render]
+  (let [render-result (atom nil)]
+    (reset! render-result
+            (render! prev-tree
+                     tree
+                     host
+                     {:state state
+                      :on-change (fn [next-state]
+                                   (request-animation-frame
+                                    #(mount-iter! @render-result tree host next-state on-render)))}))
+    (when on-render
+      (on-render))))
+
+(defn mount! [{:keys [tree host state on-render]}]
+  (mount-iter! nil tree host state on-render))

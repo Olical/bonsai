@@ -410,7 +410,8 @@
 (t/deftest mount!
   (t/testing "mounting a static tree is the same as rendering"
     (let [mount (build-mount)]
-      (sut/mount! [:p "Hi, Bonsai!"] mount)
+      (sut/mount! {:tree [:p "Hi, Bonsai!"]
+                   :host mount})
       (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))))
   (t/testing "state can be rendered"
     (let [mount (build-mount)
@@ -418,27 +419,53 @@
               (fn [name greeting]
                 [:p greeting ", " name "!"])
               {:state :name})]
-      (sut/mount! [f "Hey"] mount {:name "Bonsai"})
-      (t/is (= "<p>Hey, Bonsai!</p>" (.-innerHTML mount)))))
-  (t/testing "events that change the state cause re-renders"
-    (let [mount (build-mount)
-          inc-counter (fn [state] (update state :counter inc))
-          f (with-meta
-              (fn [counter]
-                [:p {:on-click [inc-counter]} (str counter)])
-              {:state :counter})]
-      (sut/mount! [f] mount {:counter 0})
-      (t/is (= "<p>0</p>" (.-innerHTML mount)))
-      (.click (.-firstChild mount))
-      (t/is (= "<p>1</p>" (.-innerHTML mount)))
-      (.click (.-firstChild mount))
-      (t/is (= "<p>2</p>" (.-innerHTML mount))))
-    (let [mount (build-mount)
-          inc-counter (fn [state] (update state :counter inc))
-          f (with-meta
-              (fn [counter]
-                [:p {:on-insert [inc-counter]} (str counter)])
-              {:state :counter})]
-      (sut/mount! [f] mount {:counter 0})
-      (t/is (= "<p>0</p>" (.-innerHTML mount)))
-      (t/is (= "<p>1</p>" (.-innerHTML mount))))))
+      (sut/mount! {:tree [f "Hey"]
+                   :host mount
+                   :state {:name "Bonsai"}})
+      (t/is (= "<p>Hey, Bonsai!</p>" (.-innerHTML mount))))))
+
+(t/deftest mount!-dom-events
+  (t/async
+   done
+   (t/testing "DOM events can re-render with new state"
+     (let [mount (build-mount)
+           inc-counter (fn [state] (update state :counter inc))
+           f (with-meta
+               (fn [counter]
+                 [:p {:on-click [inc-counter]} (str counter)])
+               {:state :counter})
+           render-count (atom 0)]
+       (sut/mount! {:tree [f]
+                    :host mount
+                    :state {:counter 0}
+                    :on-render (fn []
+                                 (swap! render-count inc)
+                                 (when (= 2 @render-count)
+                                   (t/is (= "<p>1</p>" (.-innerHTML mount)))
+                                   (.click (.-firstChild mount)))
+                                 (when (= 3 @render-count)
+                                   (t/is (= "<p>2</p>" (.-innerHTML mount)))
+                                   (done)))})
+       (t/is (= "<p>0</p>" (.-innerHTML mount)))
+       (.click (.-firstChild mount))))))
+
+(t/deftest mount!-lifecycle-events
+  (t/async
+   done
+   (t/testing "lifecycle events can re-render with new state"
+     (let [mount (build-mount)
+           inc-counter (fn [state] (update state :counter inc))
+           render-count (atom 0)
+           f (with-meta
+               (fn [counter]
+                 [:p {:on-insert [inc-counter]} (str counter)])
+               {:state :counter})]
+       (sut/mount! {:tree [f]
+                    :host mount
+                    :state {:counter 0}
+                    :on-render (fn []
+                                 (swap! render-count inc)
+                                 (when (= 2 @render-count)
+                                   (t/is (= "<p>1</p>" (.-innerHTML mount)))
+                                   (done)))})
+       (t/is (= "<p>0</p>" (.-innerHTML mount)))))))
