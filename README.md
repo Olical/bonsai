@@ -4,52 +4,6 @@
 
 Declarative DOM rendering with integrated state management for [ClojureScript][].
 
-## To do
-
- * [x] Rendering basic trees of nodes and text.
- * [x] Handling of weird trees, like nested seqs of nodes and nils all over the place.
- * [x] Performing minimal changes to transform any tree into another tree.
- * [x] Adding, updating or removing node attributes such as `id` or `class` (yes, `class`, you don't need `className` here).
- * [x] Rendering functions in the tree, these are components I guess? I make no distinction.
- * [x] Event listeners (adding, removing and updating).
- * [ ] Integrating state management into the rendering and event pipeline.
- * [ ] Rendering on the server and picking up where you left off on the client. This is called "hydration" and should be easy.
- * [ ] Various optimisations for things like reordering items without changing them.
- * [ ] The inevitable bug fixes that will be required because of Internet Explorer.
- * [ ] Documenting and speccing the shit out of everything because it should be solid by this point.
-
-## Potential usage
-
-This is just an outline of what I want usage to be like. This is not a final design, just some syntactic doodles.
-
-```clojure
-(defn inc-value [state]
-  (update state :value inc))
-
-(defn app [state]
-  [:p
-    {:on-click [inc-value]}
-    (str (:value state))])
-```
-
-```clojure
-(ns myapp.frontend
-  (:require [bonsai.dom :as dom]))
-  
-(dom/mount! {:value 0} [app] (js/document.getElementById "app"))
-```
-
-```clojure
-(ns myapp.backend
-  (:require [bonsai.html :as html]))
-
-(html/render [app] {:value 0})
-```
-
-## Rationale
-
-I'll write this up when I'm done, maybe as a blog post.
-
 ## Inspiration
 
 Inspired by [Elm][], [Reagent][], [Redux][], [re-frame][] et al.
