@@ -14,11 +14,9 @@
 (defn document [el]
   (.-ownerDocument el))
 
-(defn apply-listener [tree key {:keys [state on-change]}]
+(defn apply-listener [tree key {:keys [transient-state!]}]
   (when-let [listener (key (tree/attrs tree))]
-    (let [result (apply (first listener) state (rest listener))]
-      (when (and on-change (not= state result))
-        (on-change result)))))
+    (swap! transient-state! #(apply (first listener) % (rest listener)))))
 
 (defn remove! [host el tree opts]
   (apply-listener tree :on-remove opts)
@@ -51,10 +49,11 @@
   (let [listeners (aget el listeners-key)
         old-f (event-key listeners)
         new-f (fn [ev]
-                (let [{:keys [state on-change]} (aget host opts-key)
-                      result (apply (first event) state ev (rest event))]
-                  (when (and on-change (not= state result))
-                    (on-change result))))
+                (let [{:keys [transient-state! on-change]} (aget host opts-key)
+                      state @transient-state!
+                      next-state (apply (first event) state ev (rest event))]
+                  (when (and on-change (not= state next-state))
+                    (on-change next-state))))
         event-name (event-key->str event-key)]
     (when old-f
       (.removeEventListener el event-name old-f))
@@ -99,7 +98,7 @@
          acc []
          n 0]
     (let [pv (first pvs)
-          nx (tree/expand pv (first nxs) opts)
+          nx (tree/expand pv (first nxs) (assoc opts :state (deref (:transient-state! opts))))
           el (nth-child host n)]
       (if (or pv nx)
         (do
@@ -119,24 +118,38 @@
                    (inc n))))
         acc))))
 
-(defn render! [pv nx-src host opts]
-   (let [nx (tree/conform nx-src)]
-     (aset host opts-key opts)
-     (render-recur! pv
-                    (if (seq? nx)
-                      nx
-                      (list nx))
-                    host
-                    (assoc opts :host host))))
+(defn render! [pv nx-src host {:keys [state on-change] :as opts}]
+  (let [nx (tree/conform nx-src)
+        transient-state! (atom state)
+        opts (merge opts {:host host
+                          :transient-state! transient-state!})
+        result (do
+                 (aset host opts-key opts)
+                 (render-recur! pv
+                                (if (seq? nx)
+                                  nx
+                                  (list nx))
+                                host
+                                opts))
+        next-state @transient-state!]
+    (when (and on-change (not= state next-state))
+      (on-change next-state))
+    result))
 
 (defn mount!
   ([tree host]
    (mount! tree host nil))
   ([tree host state]
    (let [next-tree (atom nil)
-         on-change (fn [next-state on-change]
-                     (swap! next-tree
-                            (fn [prev-tree]
-                              (render! prev-tree tree host {:state next-state
-                                                            :on-change #(on-change % on-change)}))))]
-     (on-change state on-change))))
+         iter (fn [next-state on-change]
+                (swap! next-tree
+                       (fn [prev-tree]
+                         (render! prev-tree
+                                  tree
+                                  host
+                                  {:state next-state
+                                   :on-change (fn [next-state]
+                                                (js/setTimeout
+                                                 #(on-change next-state on-change)
+                                                 1))}))))]
+     (iter state iter))))

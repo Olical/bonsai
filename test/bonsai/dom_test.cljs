@@ -433,8 +433,7 @@
       (t/is (= "<p>1</p>" (.-innerHTML mount)))
       (.click (.-firstChild mount))
       (t/is (= "<p>2</p>" (.-innerHTML mount))))
-    ;; Exceeds max call stack.
-    #_(let [mount (build-mount)
+    (let [mount (build-mount)
           inc-counter (fn [state] (update state :counter inc))
           f (with-meta
               (fn [counter]

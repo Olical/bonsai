@@ -71,15 +71,15 @@
 (defn expand [pv [type {:keys [fn args] :as nx} :as node] {:keys [state] :as opts}]
   (let [node-fn (-> node meta ::node-fn)]
     (if (or (= type :node-fn) node-fn)
-      (let [state-fn (or (:state (meta fn)) (-> node-fn :fn meta :state))
+      (let [extractor (or (:state (meta fn)) (-> node-fn :fn meta :state))
             nx (cond-> nx
-                 state-fn (assoc :state (state-fn state)))
+                 extractor (assoc :state (extractor state)))
             fn (or fn (:fn node-fn))
             args (or args (:args node-fn))]
         (if (= (::node-fn (meta pv)) nx)
           pv
           (with-meta
             (conform (apply fn (cond->> args
-                                 state-fn (into [(:state nx)]))))
+                                 extractor (into [(:state nx)]))))
             {::node-fn nx})))
       node)))
