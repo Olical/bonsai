@@ -141,7 +141,7 @@
     #(.requestAnimationFrame js/window %)
     #(js/setTimeout % 0)))
 
-(defn mount-iter! [prev-tree tree host state on-render]
+(defn mount-recur! [prev-tree tree host state on-render]
   (let [render-result (atom nil)]
     (reset! render-result
             (render! prev-tree
@@ -150,9 +150,9 @@
                      {:state state
                       :on-change (fn [next-state]
                                    (request-animation-frame
-                                    #(mount-iter! @render-result tree host next-state on-render)))}))
+                                    #(mount-recur! @render-result tree host next-state on-render)))}))
     (when on-render
       (on-render))))
 
 (defn mount! [{:keys [tree host state on-render]}]
-  (mount-iter! nil tree host state on-render))
+  (mount-recur! nil tree host state on-render))
