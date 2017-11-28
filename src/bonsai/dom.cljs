@@ -14,6 +14,9 @@
 (defn document [el]
   (.-ownerDocument el))
 
+(defn log-error [where what]
+  (apply js/console.error "Bonsai caught an error" where (.-message what)))
+
 (defn apply-listener [tree key {:keys [transient-state!]}]
   (when-let [listener (key (tree/attrs tree))]
     (swap! transient-state! #(apply (first listener) % (rest listener)))))
@@ -141,18 +144,22 @@
     #(.requestAnimationFrame js/window %)
     #(js/setTimeout % 0)))
 
-(defn mount-recur! [prev-tree tree host state on-render]
+(defn mount-recur! [prev-tree tree host state on-render on-error]
   (let [render-result (atom nil)]
     (reset! render-result
             (render! prev-tree
                      tree
                      host
                      {:state state
+                      :on-error on-error
                       :on-change (fn [next-state]
                                    (request-animation-frame
-                                    #(mount-recur! @render-result tree host next-state on-render)))}))
+                                    #(mount-recur! @render-result tree host next-state on-render on-error)))}))
     (when on-render
-      (on-render))))
+      (try
+        (on-render)
+        (catch js/Error e
+          (on-error :on-render e))))))
 
-(defn mount! [{:keys [tree host state on-render]}]
-  (mount-recur! nil tree host state on-render))
+(defn mount! [{:keys [tree host state on-render on-error]}]
+  (mount-recur! nil tree host state on-render (or on-error log-error)))

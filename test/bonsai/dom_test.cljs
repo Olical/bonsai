@@ -469,3 +469,33 @@
                                    (t/is (= "<p>1</p>" (.-innerHTML mount)))
                                    (done)))})
        (t/is (= "<p>0</p>" (.-innerHTML mount)))))))
+
+(t/deftest mount!-error-handling
+  (t/async
+   done
+   (t/testing "when on-render throws, rendering continues"
+     (let [mount (build-mount)
+           inc-counter (fn [state] (update state :counter inc))
+           f (with-meta
+               (fn [counter]
+                 [:p {:on-click [inc-counter]} (str counter)])
+               {:state :counter})
+           render-count (atom 0)
+           error-calls (atom [])]
+       (sut/mount! {:tree [f]
+                    :host mount
+                    :state {:counter 0}
+                    :on-error (fn [where what] (swap! error-calls conj [where (.-message what)]))
+                    :on-render (fn []
+                                 (swap! render-count inc)
+                                 (when (= 2 @render-count)
+                                   (t/is (= "<p>1</p>" (.-innerHTML mount)))
+                                   (.click (.-firstChild mount)))
+                                 (when (= 3 @render-count)
+                                   (t/is (= "<p>2</p>" (.-innerHTML mount)))
+                                   (t/is (= @error-calls [[:on-render "1"]
+                                                          [:on-render "2"]]))
+                                   (done))
+                                 (throw (js/Error. @render-count)))})
+       (t/is (= "<p>0</p>" (.-innerHTML mount)))
+       (.click (.-firstChild mount))))))
