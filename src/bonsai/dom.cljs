@@ -95,13 +95,20 @@
         (.appendChild el child))
       (apply-lifecycle tree :on-insert el opts))))
 
+(defn expand [pv nx {:keys [on-error] :as opts}]
+  (try
+    (tree/expand pv nx opts)
+    (catch js/Error e
+      (on-error :expand e)
+      (or pv [:void]))))
+
 (defn render-recur! [pvs nxs host opts]
   (loop [pvs pvs
          nxs (tree/flatten-seqs nxs)
          acc []
          n 0]
     (let [pv (first pvs)
-          nx (tree/expand pv (first nxs) (assoc opts :state (deref (:transient-state! opts))))
+          nx (expand pv (first nxs) (assoc opts :state (deref (:transient-state! opts))))
           el (nth-child host n)]
       (if (or pv nx)
         (do

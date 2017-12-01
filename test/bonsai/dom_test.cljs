@@ -415,7 +415,29 @@
           prev (sut/render! nil [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn]]]] mount {:state {:myval "FOO"}})]
       (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>FOO</p></div></li></ul>" (.-innerHTML mount)))
       (sut/render! prev [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn]]]] mount {:state {:myval "BAR"}})
-      (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>BAR</p></div></li></ul>" (.-innerHTML mount))))))
+      (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>BAR</p></div></li></ul>" (.-innerHTML mount)))))
+
+  (t/testing "when expansion of a node-fn throws, rendering continues"
+    (let [mount (build-mount)
+          error-calls (atom [])
+          f (fn [] (throw (js/Error. "ohno")))
+          prev (sut/render! nil [:div "foo" [f] "bar"] mount
+                            {:on-error (fn [where what] (swap! error-calls conj [where (.-message what)]))})]
+      (t/is (= "<div>foobar</div>" (.-innerHTML mount)))
+      (t/is (= [[:expand "ohno"]] @error-calls)))
+    (let [mount (build-mount)
+          error-calls (atom [])
+          f (fn [pass?]
+              (if pass?
+                "YAY"
+                (throw (js/Error. "ohno"))))
+          opts {:on-error (fn [where what] (swap! error-calls conj [where (.-message what)]))}
+          prev (sut/render! nil [:div "foo" [f true] "bar"] mount opts)]
+      (t/is (= "<div>fooYAYbar</div>" (.-innerHTML mount)))
+      (t/is (= [] @error-calls))
+      (sut/render! prev [:div "foo" [f false] "baz"] mount opts)
+      (t/is (= "<div>fooYAYbaz</div>" (.-innerHTML mount)))
+      (t/is (= [[:expand "ohno"]] @error-calls)))))
 
 (t/deftest mount!
   (t/testing "mounting a static tree is the same as rendering"
