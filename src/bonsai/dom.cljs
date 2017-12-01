@@ -17,17 +17,17 @@
 (defn log-error [where what]
   (apply js/console.error "Bonsai caught an error" where (.-message what)))
 
-(defn apply-listener [tree key {:keys [transient-state!]}]
+(defn apply-lifecycle [tree key el {:keys [transient-state!]}]
   (when-let [listener (key (tree/attrs tree))]
-    (swap! transient-state! #(apply (first listener) % (rest listener)))))
+    (swap! transient-state! #(apply (first listener) % el (rest listener)))))
 
 (defn remove! [host el tree opts]
-  (apply-listener tree :on-remove opts)
+  (apply-lifecycle tree :on-remove el opts)
   (.removeChild host el))
 
 (defn insert! [host ref-el tree opts]
-  (apply-listener tree :on-insert opts)
   (let [el (tree->el (document host) tree)]
+    (apply-lifecycle tree :on-insert el opts)
     (if ref-el
       (.insertBefore host el ref-el)
       (.appendChild host el))))
@@ -89,11 +89,11 @@
     (aset old "nodeValue" value)
     (let [el (tree->el (document old) tree)]
       (render-attrs! nil (tree/attrs tree) el opts)
-      (apply-listener prev-tree :on-remove opts)
+      (apply-lifecycle prev-tree :on-remove old opts)
       (.replaceChild host el old)
       (doseq [child (children old)]
         (.appendChild el child))
-      (apply-listener tree :on-insert opts))))
+      (apply-lifecycle tree :on-insert el opts))))
 
 (defn render-recur! [pvs nxs host opts]
   (loop [pvs pvs

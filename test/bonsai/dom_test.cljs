@@ -210,7 +210,7 @@
   (t/testing "you can listen for insert / remove of the node (called just before it happens)"
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [_ x] (swap! calls x))
+          f (fn [_ _ x] (swap! calls x))
           prev (sut/render! nil [:div "bloop"] mount {})]
       (t/is (= "<div>bloop</div>" (.-innerHTML mount)))
       (t/is (= @calls 0))
@@ -222,7 +222,7 @@
         (t/is (= @calls 1))))
     (let [mount (build-mount)
           calls (atom 0)
-          f (fn [_ x] (swap! calls x))
+          f (fn [_ _ x] (swap! calls x))
           prev (sut/render! nil [:div "bloop" [:span {:on-remove [f inc]} "floop"] "gloop"] mount {})]
       (t/is (= "<div>bloop<span>floop</span>gloop</div>" (.-innerHTML mount)))
       (t/is (= @calls 0))
@@ -233,10 +233,20 @@
         (t/is (= "<div>bloop</div>" (.-innerHTML mount)))
         (t/is (= @calls 1)))))
 
+  (t/testing "insert / remove are passed their respective DOM nodes"
+    (let [mount (build-mount)
+          calls (atom [])
+          f (fn [& args] (swap! calls conj args))
+          prev (sut/render! nil [:div {:on-insert [f :foo]
+                                       :on-remove [f :bar]} "hi"] mount {})
+          div (.-firstChild mount)]
+      (sut/render! prev nil mount {})
+      (t/is (= @calls [[nil div :foo] [nil div :bar]]))))
+
   (t/testing "migrating is technically a remove and then an insert"
     (let [mount (build-mount)
           calls (atom [])
-          f (fn [_ x] (swap! calls conj x))
+          f (fn [_ _ x] (swap! calls conj x))
           attrs {:on-insert [f :i] :on-remove [f :r]}
           prev (sut/render! nil [:div attrs "hi"] mount {})]
       (t/is (= "<div>hi</div>" (.-innerHTML mount)))
@@ -304,12 +314,12 @@
   (t/testing "listeners are provided with the state"
     (let [mount (build-mount)
           states (atom [])
-          f (fn [_ n hopefully-nil] (swap! states conj [n hopefully-nil]))]
+          f (fn [_ _ n hopefully-nil] (swap! states conj [n hopefully-nil]))]
       (sut/render! nil [:div {:on-insert [f 0]}] mount {})
       (t/is (= @states [[0 nil]])))
     (let [mount (build-mount)
           states (atom [])
-          f (fn [state n] (swap! states conj [n state]))]
+          f (fn [state _ n] (swap! states conj [n state]))]
       (-> (sut/render! nil [:div {:on-insert [f 0]
                                   :on-remove [f 1]}] mount {:state :foo})
           (sut/render! [:p] mount {:state :bar}))
@@ -348,7 +358,7 @@
         (t/is (= @calls [1 2]))))
     (let [mount (build-mount)
           calls (atom [])
-          f (fn [state x] (x state))
+          f (fn [state _ x] (x state))
           change (fn [state] (swap! calls conj state))]
       (sut/render! nil [:div {:on-insert [f inc]}] mount {:state 0, :on-change change})
       (t/is (= @calls [1]))))
