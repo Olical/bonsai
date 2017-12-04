@@ -55,16 +55,23 @@
   (let [listeners (aget el listeners-key)
         old-f (event-key listeners)
         new-f (fn [ev]
-                (let [{:keys [transient-state! on-change]} (aget host opts-key)
-                      state @transient-state!
-                      next-state (apply (first event) state ev (rest event))]
-                  (when (and on-change (not= state next-state))
-                    (on-change next-state))))
+                (let [{:keys [transient-state! on-change on-error]} (aget host opts-key)
+                      state @transient-state!]
+                  (try
+                    (let [next-state (apply (first event) state ev (rest event))]
+                      (when (and on-change (not= state next-state))
+                        (on-change next-state)))
+                    (catch js/Error e
+                      (on-error :listener e)))))
         event-name (event-key->str event-key)]
     (when old-f
       (.removeEventListener el event-name old-f))
     (.addEventListener el event-name new-f)
     (aset el listeners-key (assoc listeners event-key new-f))))
+
+(let [a 1
+      b a]
+  b)
 
 (defn children [el]
   (when el

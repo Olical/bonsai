@@ -454,6 +454,7 @@
       (sut/mount! {:tree [:p "Hi, Bonsai!"]
                    :host mount})
       (t/is (= "<p>Hi, Bonsai!</p>" (.-innerHTML mount)))))
+
   (t/testing "state can be rendered"
     (let [mount (build-mount)
           f (with-meta
@@ -463,7 +464,24 @@
       (sut/mount! {:tree [f "Hey"]
                    :host mount
                    :state {:name "Bonsai"}})
-      (t/is (= "<p>Hey, Bonsai!</p>" (.-innerHTML mount))))))
+      (t/is (= "<p>Hey, Bonsai!</p>" (.-innerHTML mount)))))
+
+  (t/testing "event listeners that throw let the rendering continue"
+    (let [mount (build-mount)
+          error-calls (atom [])
+          handler (fn [] (throw (js/Error. "ohno")))
+          f (with-meta
+              (fn [n] [:div {:on-click [handler]} (str n)])
+              {:state :n})]
+      (sut/mount! {:tree [f]
+                   :host mount
+                   :state {:n 0}
+                   :on-error (fn [where what] (swap! error-calls conj [where (.-message what)]))})
+      (t/is (= "<div>0</div>" (.-innerHTML mount)))
+      (t/is (= @error-calls []))
+      (.click (.-firstChild mount))
+      (t/is (= "<div>0</div>" (.-innerHTML mount)))
+      (t/is (= @error-calls [[:listener "ohno"]])))))
 
 (t/deftest mount!-dom-events
   (t/async
