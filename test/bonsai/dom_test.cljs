@@ -437,7 +437,16 @@
       (t/is (= [] @error-calls))
       (sut/render! prev [:div "foo" [f false] "baz"] mount opts)
       (t/is (= "<div>fooYAYbaz</div>" (.-innerHTML mount)))
-      (t/is (= [[:expand "ohno"]] @error-calls)))))
+      (t/is (= [[:expand "ohno"]] @error-calls))))
+
+  (t/testing "when lifecycle hooks fail, rendering continues"
+    (let [mount (build-mount)
+          error-calls (atom [])
+          f (fn [] (throw (js/Error. "ohno")))
+          opts {:on-error (fn [where what] (swap! error-calls conj [where (.-message what)]))}]
+      (sut/render! nil [:div {:on-insert [f]} "I'm at Clojure eXchange right now."] mount opts)
+      (t/is (= "<div>I'm at Clojure eXchange right now.</div>" (.-innerHTML mount)))
+      (t/is (= @error-calls [[:lifecycle "ohno"]])))))
 
 (t/deftest mount!
   (t/testing "mounting a static tree is the same as rendering"

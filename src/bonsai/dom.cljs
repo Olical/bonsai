@@ -17,9 +17,12 @@
 (defn log-error [where what]
   (apply js/console.error "Bonsai caught an error" where (.-message what)))
 
-(defn apply-lifecycle [tree key el {:keys [transient-state!]}]
+(defn apply-lifecycle [tree key el {:keys [transient-state! on-error] :as opts}]
   (when-let [listener (key (tree/attrs tree))]
-    (swap! transient-state! #(apply (first listener) % el (rest listener)))))
+    (try
+      (swap! transient-state! #(apply (first listener) % el (rest listener)))
+      (catch js/Error e
+        (on-error :lifecycle e)))))
 
 (defn remove! [host el tree opts]
   (apply-lifecycle tree :on-remove el opts)
