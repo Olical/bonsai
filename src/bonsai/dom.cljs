@@ -1,7 +1,8 @@
 (ns bonsai.dom
-  (:require [bonsai.tree :as tree]
+  (:require [clojure.string :as str]
             [cljs.spec.alpha :as s]
-            [clojure.string :as str]))
+            [bonsai.tree :as tree]
+            [bonsai.state :as state]))
 
 (defonce listeners-key (gensym "bonsai-listeners"))
 (defonce opts-key (gensym "bonsai-opts"))
@@ -20,7 +21,7 @@
 (defn apply-lifecycle [tree key el {:keys [transient-state! on-error] :as opts}]
   (when-let [listener (key (tree/attrs tree))]
     (try
-      (swap! transient-state! #(apply (first listener) % el (rest listener)))
+      (apply state/next! transient-state! (first listener) el (rest listener))
       (catch js/Error e
         (on-error :lifecycle e)))))
 
@@ -58,11 +59,12 @@
                 (let [{:keys [transient-state! on-change on-error]} (aget host opts-key)
                       state @transient-state!]
                   (try
-                    (let [next-state (apply (first event) state ev (rest event))]
-                      (when (and on-change (not= state next-state))
-                        (on-change next-state)))
+                    (apply state/next! transient-state! (first event) ev (rest event))
                     (catch js/Error e
-                      (on-error :listener e)))))
+                      (on-error :listener e)))
+                  (let [next-state @transient-state!]
+                    (when (and on-change (not= state next-state))
+                      (on-change next-state)))))
         event-name (event-key->str event-key)]
     (when old-f
       (.removeEventListener el event-name old-f))
@@ -175,4 +177,4 @@
           (on-error :on-render e))))))
 
 (defn mount! [{:keys [tree host state on-render on-error]}]
-  (mount-recur! nil tree host state on-render (or on-error log-error)))
+  (mount-recur! nil tree host (or state {}) on-render (or on-error log-error)))

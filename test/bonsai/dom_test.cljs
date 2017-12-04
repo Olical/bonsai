@@ -1,6 +1,7 @@
 (ns bonsai.dom-test
   (:require [cljs.test :as t :include-macros true]
             [bonsai.dom :as sut]
+            [bonsai.state :as state]
             [jsdom]))
 
 (defn build-mount []
@@ -481,7 +482,9 @@
       (t/is (= @error-calls []))
       (.click (.-firstChild mount))
       (t/is (= "<div>0</div>" (.-innerHTML mount)))
-      (t/is (= @error-calls [[:listener "ohno"]])))))
+      (t/is (= @error-calls [[:listener "ohno"]]))))
+
+  )
 
 (t/deftest mount!-dom-events
   (t/async
@@ -558,3 +561,35 @@
                                  (throw (js/Error. @render-count)))})
        (t/is (= "<p>0</p>" (.-innerHTML mount)))
        (.click (.-firstChild mount))))))
+
+#_(t/deftest mount!-effects
+  (t/async
+   done
+   (t/testing "effects are applied by bonsai.state"
+     (let [mount (build-mount)
+           render-count (atom 0)
+           add (fn [state v]
+                 (-> state
+                     (update :n + v)))
+           slow-pi (fn [next! cb]
+                     (js/setTimeout #(next! cb 3.14) 10))
+           handler (fn [state]
+                     (-> state
+                         (state/with-effect slow-pi add)))
+           f (with-meta
+               (fn [n] [:div {:on-click [handler]} (str n)])
+               {:state :n})]
+       (sut/mount! {:tree [f]
+                    :host mount
+                    :state {:n 0}
+                    :on-render (fn []
+                                 (swap! render-count inc)
+                                 (when (= 1 @render-count)
+                                   (t/is (= "<div>0</div>" (.-innerHTML mount)))
+                                   (.click (.-firstChild mount)))
+                                 (when (= 2 @render-count)
+                                   (t/is (= "<div>3.14</div>" (.-innerHTML mount)))
+                                   (.click (.-firstChild mount)))
+                                 (when (= 3 @render-count)
+                                   (t/is (= "<div>6.28</div>"))
+                                   (done)))})))))

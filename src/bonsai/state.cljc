@@ -16,5 +16,6 @@
 
 (defn next! [state! action & args]
   (apply swap! state! action args)
-  (consume-effects! state!))
+  (when (map? @state!)
+    (consume-effects! state!)))
 
