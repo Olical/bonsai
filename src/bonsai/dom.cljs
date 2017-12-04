@@ -69,10 +69,6 @@
     (.addEventListener el event-name new-f)
     (aset el listeners-key (assoc listeners event-key new-f))))
 
-(let [a 1
-      b a]
-  b)
-
 (defn children [el]
   (when el
     (into [] (array-seq (aget el "childNodes")))))
