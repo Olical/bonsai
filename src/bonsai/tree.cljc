@@ -68,12 +68,12 @@
         (recur (rest nodes) (conj acc node)))
       acc)))
 
-(defn expand [pv [type {:keys [fn args] :as nx} :as node] {:keys [state] :as opts}]
+(defn expand [pv [type {:keys [fn args] :as nx} :as node] {:keys [state!] :as opts}]
   (let [node-fn (-> node meta ::node-fn)]
     (if (or (= type :node-fn) node-fn)
       (let [extractor (or (:state (meta fn)) (-> node-fn :fn meta :state))
             nx (cond-> nx
-                 extractor (assoc :state (extractor state)))
+                 extractor (assoc :state (extractor @state!)))
             fn (or fn (:fn node-fn))
             args (or args (:args node-fn))]
         (if (= (::node-fn (meta pv)) nx)

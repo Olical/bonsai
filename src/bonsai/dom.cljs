@@ -18,10 +18,10 @@
 (defn log-error [where what]
   (apply js/console.error "Bonsai caught an error" where (.-message what)))
 
-(defn apply-lifecycle [tree key el {:keys [transient-state! on-error] :as opts}]
+(defn apply-lifecycle [tree key el {:keys [state! on-error] :as opts}]
   (when-let [listener (key (tree/attrs tree))]
     (try
-      (apply state/next! transient-state! (first listener) el (rest listener))
+      (apply state/next! state! (first listener) el (rest listener))
       (catch js/Error e
         (on-error :lifecycle e)))))
 
@@ -56,14 +56,14 @@
   (let [listeners (aget el listeners-key)
         old-f (event-key listeners)
         new-f (fn [ev]
-                (let [{:keys [transient-state! on-change on-error]} (aget host opts-key)
-                      state @transient-state!]
+                (let [{:keys [on-change on-error state!]} (aget host opts-key)
+                      prev-state @state!]
                   (try
-                    (apply state/next! transient-state! (first event) ev (rest event))
+                    (apply state/next! state! (first event) ev (rest event))
                     (catch js/Error e
                       (on-error :listener e)))
-                  (let [next-state @transient-state!]
-                    (when (and on-change (not= state next-state))
+                  (let [next-state @state!]
+                    (when (and on-change (not= prev-state next-state))
                       (on-change next-state)))))
         event-name (event-key->str event-key)]
     (when old-f
@@ -116,7 +116,7 @@
          acc []
          n 0]
     (let [pv (first pvs)
-          nx (expand pv (first nxs) (assoc opts :state (deref (:transient-state! opts))))
+          nx (expand pv (first nxs) opts)
           el (nth-child host n)]
       (if (or pv nx)
         (do
@@ -136,11 +136,12 @@
                    (inc n))))
         acc))))
 
-(defn render! [pv nx-src host {:keys [state on-change] :as opts}]
+(defn render! [pv nx-src host {:keys [state! on-change] :as opts}]
   (let [nx (tree/conform nx-src)
-        transient-state! (atom state)
+        state! (or state! (atom {}))
         opts (merge opts {:host host
-                          :transient-state! transient-state!})
+                          :state! state!})
+        prev-state @state!
         result (do
                  (aset host opts-key opts)
                  (render-recur! pv
@@ -149,8 +150,8 @@
                                   (list nx))
                                 host
                                 opts))
-        next-state @transient-state!]
-    (when (and on-change (not= state next-state))
+        next-state @state!]
+    (when (and on-change (not= prev-state next-state))
       (on-change next-state))
     result))
 
@@ -159,17 +160,17 @@
     #(.requestAnimationFrame js/window %)
     #(js/setTimeout % 0)))
 
-(defn mount-recur! [prev-tree tree host state on-render on-error]
+(defn mount-recur! [prev-tree tree host state! on-render on-error]
   (let [render-result (atom nil)]
     (reset! render-result
             (render! prev-tree
                      tree
                      host
-                     {:state state
+                     {:state! state!
                       :on-error on-error
-                      :on-change (fn [next-state]
+                      :on-change (fn []
                                    (request-animation-frame
-                                    #(mount-recur! @render-result tree host next-state on-render on-error)))}))
+                                    #(mount-recur! @render-result tree host state! on-render on-error)))}))
     (when on-render
       (try
         (on-render)
@@ -177,4 +178,9 @@
           (on-error :on-render e))))))
 
 (defn mount! [{:keys [tree host state on-render on-error]}]
-  (mount-recur! nil tree host (or state {}) on-render (or on-error log-error)))
+  (mount-recur! nil
+                tree
+                host
+                (atom (or state {}))
+                on-render
+                (or on-error log-error)))

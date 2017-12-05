@@ -242,7 +242,7 @@
                                        :on-remove [f :bar]} "hi"] mount {})
           div (.-firstChild mount)]
       (sut/render! prev nil mount {})
-      (t/is (= @calls [[nil div :foo] [nil div :bar]]))))
+      (t/is (= @calls [[{} div :foo] [{} div :bar]]))))
 
   (t/testing "migrating is technically a remove and then an insert"
     (let [mount (build-mount)
@@ -322,15 +322,15 @@
           states (atom [])
           f (fn [state _ n] (swap! states conj [n state]))]
       (-> (sut/render! nil [:div {:on-insert [f 0]
-                                  :on-remove [f 1]}] mount {:state :foo})
-          (sut/render! [:p] mount {:state :bar}))
+                                  :on-remove [f 1]}] mount {:state! (atom :foo)})
+          (sut/render! [:p] mount {:state! (atom :bar)}))
       (t/is (= @states [[0 :foo] [1 :bar]])))
     (let [mount (build-mount)
           states (atom [])
           f (fn [state e n] (swap! states conj [n (-> e .-target .-nodeName) state]))
-          prev (sut/render! nil [:div {:on-click [f 0]}] mount {:state :foo})]
+          prev (sut/render! nil [:div {:on-click [f 0]}] mount {:state! (atom :foo)})]
       (.click (.-firstChild mount))
-      (sut/render! prev [:div {:on-click [f 1]}] mount {:state :bar})
+      (sut/render! prev [:div {:on-click [f 1]}] mount {:state! (atom :bar)})
       (.click (.-firstChild mount))
       (t/is (= @states [[0 "DIV" :foo] [1 "DIV" :bar]])))
     (let [mount (build-mount)
@@ -339,35 +339,35 @@
           f (fn [& args] (swap! calls conj (map maybe-node-name args)))
           prev (sut/render! nil [:div {:on-click [f 0]}] mount {})]
       (.click (.-firstChild mount))
-      (let [prev (sut/render! prev [:div {:on-click [f 0]}] mount {:state :foo})]
+      (let [prev (sut/render! prev [:div {:on-click [f 0]}] mount {:state! (atom :foo)})]
         (.click (.-firstChild mount))
         (sut/render! prev [:div {:on-click [f 0]}] mount {})
         (.click (.-firstChild mount))
-        (t/is (= @calls [[nil "DIV" 0] [:foo "DIV" 0] [nil "DIV" 0]])))))
+        (t/is (= @calls [[{} "DIV" 0] [:foo "DIV" 0] [{} "DIV" 0]])))))
 
   (t/testing "the change handler is called with the updated state if it changed"
     (let [mount (build-mount)
           calls (atom [])
           f (fn [state _ x] (x state))
           change (fn [state] (swap! calls conj state))
-          prev (sut/render! nil [:div {:on-click [f inc]}] mount {:state 0, :on-change change})]
+          prev (sut/render! nil [:div {:on-click [f inc]}] mount {:state! (atom 0), :on-change change})]
       (t/is (= @calls []))
       (.click (.-firstChild mount))
       (t/is (= @calls [1]))
-      (let [prev (sut/render! prev [:div {:on-click [f inc]}] mount {:state 1, :on-change change})]
+      (let [prev (sut/render! prev [:div {:on-click [f inc]}] mount {:state! (atom 1), :on-change change})]
         (.click (.-firstChild mount))
         (t/is (= @calls [1 2]))))
     (let [mount (build-mount)
           calls (atom [])
           f (fn [state _ x] (x state))
           change (fn [state] (swap! calls conj state))]
-      (sut/render! nil [:div {:on-insert [f inc]}] mount {:state 0, :on-change change})
+      (sut/render! nil [:div {:on-insert [f inc]}] mount {:state! (atom 0), :on-change change})
       (t/is (= @calls [1]))))
 
   (t/testing "nodes that request state are provided it as their first argument"
     (let [mount (build-mount)
           node-fn (with-meta (fn [state post] [:p (str state post)]) {:state :pre})]
-      (sut/render! nil [node-fn "World!"] mount {:state {:pre "Hello, "}})
+      (sut/render! nil [node-fn "World!"] mount {:state! (atom {:pre "Hello, "})})
       (t/is (= "<p>Hello, World!</p>" (.-innerHTML mount)))))
 
   (t/testing "nodes with state are only called when that required sub-state changes"
@@ -378,13 +378,13 @@
                       (swap! calls conj [state post])
                       [:p (str state post)])
                     {:state :pre})
-          prev (sut/render! nil [node-fn "World!"] mount {:state {:pre "Hello, ", :other :foo}})]
+          prev (sut/render! nil [node-fn "World!"] mount {:state! (atom {:pre "Hello, ", :other :foo})})]
       (t/is (= "<p>Hello, World!</p>" (.-innerHTML mount)))
       (t/is (= @calls [["Hello, " "World!"]]))
-      (let [prev (sut/render! prev [node-fn "World!"] mount {:state {:pre "Hey, ", :other :foo}})]
+      (let [prev (sut/render! prev [node-fn "World!"] mount {:state! (atom {:pre "Hey, ", :other :foo})})]
         (t/is (= "<p>Hey, World!</p>" (.-innerHTML mount)))
         (t/is (= @calls [["Hello, " "World!"] ["Hey, " "World!"]]))
-        (sut/render! prev [node-fn "World!"] mount {:state {:pre "Hey, ", :other :bar}})
+        (sut/render! prev [node-fn "World!"] mount {:state! (atom {:pre "Hey, ", :other :bar})})
         (t/is (= "<p>Hey, World!</p>" (.-innerHTML mount)))
         (t/is (= @calls [["Hello, " "World!"] ["Hey, " "World!"]])))))
 
@@ -392,30 +392,30 @@
     (let [mount (build-mount)
           node-fn (with-meta (fn [state] [:p state]) {:state :myval})
           wrapper-node-fn (fn [child] [:div "Wrapped: " child])
-          prev (sut/render! nil [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn :a]]]] mount {:state {:myval "FOO"}})]
+          prev (sut/render! nil [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn :a]]]] mount {:state! (atom {:myval "FOO"})})]
       (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>FOO</p></div></li></ul>" (.-innerHTML mount)))
-      (sut/render! prev [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn :b]]]] mount {:state {:myval "BAR"}})
+      (sut/render! prev [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn :b]]]] mount {:state! (atom {:myval "BAR"})})
       (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>BAR</p></div></li></ul>" (.-innerHTML mount)))))
 
   (t/testing "deep node-fns are updated, even when it's just the state that changed"
     (let [mount (build-mount)
           node-fn (with-meta (fn [state] [:p state]) {:state :myval})
-          prev (sut/render! nil [:div [node-fn]] mount {:state {:myval "FOO"}})]
+          prev (sut/render! nil [:div [node-fn]] mount {:state! (atom {:myval "FOO"})})]
       (t/is (= "<div><p>FOO</p></div>" (.-innerHTML mount)))
-      (sut/render! prev [:div [node-fn]] mount {:state {:myval "BAR"}})
+      (sut/render! prev [:div [node-fn]] mount {:state! (atom {:myval "BAR"})})
       (t/is (= "<div><p>BAR</p></div>" (.-innerHTML mount))))
     (let [mount (build-mount)
           node-fn (with-meta (fn [state] [:p state]) {:state :myval})
-          prev (sut/render! nil [:ul [:li "boop"] [:li [:div [node-fn]]]] mount {:state {:myval "FOO"}})]
+          prev (sut/render! nil [:ul [:li "boop"] [:li [:div [node-fn]]]] mount {:state! (atom {:myval "FOO"})})]
       (t/is (= "<ul><li>boop</li><li><div><p>FOO</p></div></li></ul>" (.-innerHTML mount)))
-      (sut/render! prev [:ul [:li "boop"] [:li [:div [node-fn]]]] mount {:state {:myval "BAR"}})
+      (sut/render! prev [:ul [:li "boop"] [:li [:div [node-fn]]]] mount {:state! (atom {:myval "BAR"})})
       (t/is (= "<ul><li>boop</li><li><div><p>BAR</p></div></li></ul>" (.-innerHTML mount))))
     (let [mount (build-mount)
           node-fn (with-meta (fn [state] [:p state]) {:state :myval})
           wrapper-node-fn (fn [child] [:div "Wrapped: " child])
-          prev (sut/render! nil [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn]]]] mount {:state {:myval "FOO"}})]
+          prev (sut/render! nil [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn]]]] mount {:state! (atom {:myval "FOO"})})]
       (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>FOO</p></div></li></ul>" (.-innerHTML mount)))
-      (sut/render! prev [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn]]]] mount {:state {:myval "BAR"}})
+      (sut/render! prev [:ul [:li "boop"] [:li [wrapper-node-fn [node-fn]]]] mount {:state! (atom {:myval "BAR"})})
       (t/is (= "<ul><li>boop</li><li><div>Wrapped: <p>BAR</p></div></li></ul>" (.-innerHTML mount)))))
 
   (t/testing "when expansion of a node-fn throws, rendering continues"

@@ -115,7 +115,7 @@
       (t/is (= @calls 2))))
   (t/testing "when node-fns have :state meta, they take the opts :state into account"
     (let [f (with-meta (fn [state x] [:p (str state x)]) {:state :foo})]
-      (t/is (= (sut/expand nil (sut/conform [f "World!"]) {:state {:foo "Hello, "}})
+      (t/is (= (sut/expand nil (sut/conform [f "World!"]) {:state! (atom {:foo "Hello, "})})
                (sut/conform [:p "Hello, World!"])))))
   (t/testing "the result of an expand can be re-expanded if the state changes"
     (let [f (fn [a] [:p "hi " a])
@@ -126,7 +126,7 @@
     (let [f (with-meta
               (fn [msg] [:p "hi " msg])
               {:state :msg})
-          prev (sut/expand nil (sut/conform [f]) {:state {:msg "foo"}})]
+          prev (sut/expand nil (sut/conform [f]) {:state! (atom {:msg "foo"})})]
       (t/is (= prev (sut/conform [:p "hi " "foo"])))
-      (let [prev (sut/expand prev prev {:state {:msg "bar"}})]
+      (let [prev (sut/expand prev prev {:state! (atom {:msg "bar"})})]
         (t/is (= prev (sut/conform [:p "hi " "bar"])))))))
