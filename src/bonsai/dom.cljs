@@ -56,15 +56,11 @@
   (let [listeners (aget el listeners-key)
         old-f (event-key listeners)
         new-f (fn [ev]
-                (let [{:keys [on-change on-error state!]} (aget host opts-key)
-                      prev-state @state!]
+                (let [{:keys [on-error state!]} (aget host opts-key)]
                   (try
                     (apply state/next! state! (first event) ev (rest event))
                     (catch js/Error e
-                      (on-error :listener e)))
-                  (let [next-state @state!]
-                    (when (and on-change (not= prev-state next-state))
-                      (on-change next-state)))))
+                      (on-error :listener e)))))
         event-name (event-key->str event-key)]
     (when old-f
       (.removeEventListener el event-name old-f))
@@ -136,12 +132,11 @@
                    (inc n))))
         acc))))
 
-(defn render! [pv nx-src host {:keys [state! on-change] :as opts}]
+(defn render! [pv nx-src host {:keys [state!] :as opts}]
   (let [nx (tree/conform nx-src)
         state! (or state! (atom {}))
         opts (merge opts {:host host
                           :state! state!})
-        prev-state @state!
         result (do
                  (aset host opts-key opts)
                  (render-recur! pv
@@ -149,10 +144,7 @@
                                   nx
                                   (list nx))
                                 host
-                                opts))
-        next-state @state!]
-    (when (and on-change (not= prev-state next-state))
-      (on-change next-state))
+                                opts))]
     result))
 
 (def request-animation-frame
@@ -160,27 +152,28 @@
     #(.requestAnimationFrame js/window %)
     #(js/setTimeout % 0)))
 
-(defn mount-recur! [prev-tree tree host state! on-render on-error]
-  (let [render-result (atom nil)]
-    (reset! render-result
-            (render! prev-tree
-                     tree
-                     host
-                     {:state! state!
-                      :on-error on-error
-                      :on-change (fn []
-                                   (request-animation-frame
-                                    #(mount-recur! @render-result tree host state! on-render on-error)))}))
-    (when on-render
-      (try
-        (on-render)
-        (catch js/Error e
-          (on-error :on-render e))))))
-
 (defn mount! [{:keys [tree host state on-render on-error]}]
-  (mount-recur! nil
-                tree
-                host
-                (atom (or state {}))
-                on-render
-                (or on-error log-error)))
+  (let [state! (atom (or state {}))
+        rendering?! (atom true)
+        on-error (or on-error log-error)
+        opts {:state! state! :on-error on-error}
+        prev-tree (atom nil)]
+    (letfn [(render []
+              (let [prev-state @state!]
+                (swap! prev-tree render! tree host opts)
+                (reset! rendering?! false)
+                (when on-render
+                  (try
+                    (on-render)
+                    (catch js/Error e
+                      (on-error :on-render e))))
+                (when (not= prev-state @state!)
+                  (re-render))))
+            (re-render []
+              (reset! rendering?! true)
+              (request-animation-frame render))]
+      (add-watch state! ::re-renderer
+                 (fn [_ _ prev-state next-state]
+                   (when (and (not @rendering?!) (not= prev-state next-state))
+                     (re-render))))
+      (render))))

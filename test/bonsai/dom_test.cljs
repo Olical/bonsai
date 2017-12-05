@@ -345,25 +345,6 @@
         (.click (.-firstChild mount))
         (t/is (= @calls [[{} "DIV" 0] [:foo "DIV" 0] [{} "DIV" 0]])))))
 
-  (t/testing "the change handler is called with the updated state if it changed"
-    (let [mount (build-mount)
-          calls (atom [])
-          f (fn [state _ x] (x state))
-          change (fn [state] (swap! calls conj state))
-          prev (sut/render! nil [:div {:on-click [f inc]}] mount {:state! (atom 0), :on-change change})]
-      (t/is (= @calls []))
-      (.click (.-firstChild mount))
-      (t/is (= @calls [1]))
-      (let [prev (sut/render! prev [:div {:on-click [f inc]}] mount {:state! (atom 1), :on-change change})]
-        (.click (.-firstChild mount))
-        (t/is (= @calls [1 2]))))
-    (let [mount (build-mount)
-          calls (atom [])
-          f (fn [state _ x] (x state))
-          change (fn [state] (swap! calls conj state))]
-      (sut/render! nil [:div {:on-insert [f inc]}] mount {:state! (atom 0), :on-change change})
-      (t/is (= @calls [1]))))
-
   (t/testing "nodes that request state are provided it as their first argument"
     (let [mount (build-mount)
           node-fn (with-meta (fn [state post] [:p (str state post)]) {:state :pre})]
@@ -562,7 +543,7 @@
        (t/is (= "<p>0</p>" (.-innerHTML mount)))
        (.click (.-firstChild mount))))))
 
-#_(t/deftest mount!-effects
+(t/deftest mount!-effects
   (t/async
    done
    (t/testing "effects are applied by bonsai.state"
