@@ -18,7 +18,7 @@ Testing is performed with `lein test` for the Clojure parts and `lein test-cljs`
 
 I usually have a small terminal open with `lein test-cljs-auto` (`lein doo node test auto`) running. It'll run the tests as I change the files which is very convinient.
 
-Make sure you add some sort of test to prove your change works as expected, they will also  be run for you in [Travis CI][travis].The test results will show up on your pull request.
+Make sure you add some sort of test to prove your change works as expected, they will also be run for you in [Travis CI][travis].The test results will show up on your pull request.
 
 ## Don't be shy
 
