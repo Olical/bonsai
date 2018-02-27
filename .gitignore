@@ -1,2 +1,4 @@
 .cpcache/
+dist/
+node_modules/
 .nrepl-port
