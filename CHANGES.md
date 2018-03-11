@@ -1,4 +1,8 @@
-# bonsai changes
+# Bonsai changes
+
+## v2.0.0 (work in progress)
+
+ * Restarted the project, it's no longer just state management, it's also handling the rendering.
 
 ## v1.2.0
 

@@ -1,12 +1,4 @@
-/target
-/classes
-/checkouts
-pom.xml
-pom.xml.asc
-*.jar
-*.class
-/.lein-*
-/.nrepl-port
-out/
+.cpcache/
 node_modules/
-.cljs_node_repl/
+cljs-test-runner-out/
+.nrepl-port

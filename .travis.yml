@@ -1,10 +1,14 @@
-language: clojure
-script:
- - npm install
- - lein test-all
+sudo: true
+language: java
+script: make test
+install:
+  - curl -O https://download.clojure.org/install/linux-install-1.9.0.358.sh
+  - chmod +x linux-install-1.9.0.358.sh
+  - sudo ./linux-install-1.9.0.358.sh
+jdk:
+  - oraclejdk8
 cache:
   directories:
-    - node_modules
-    - target
-    - out
     - $HOME/.m2
+    - node_modules
+    - cljs-test-runner-out
