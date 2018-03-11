@@ -1,6 +1,7 @@
 (ns bonsai.diff-test
   (:require [bonsai.diff :as sut]
-            [clojure.test :as t]))
+            [#?(:clj clojure.test
+                :cljs cljs.test) :as t]))
 
 (t/deftest adding
   (t/testing "just some basic stuff"

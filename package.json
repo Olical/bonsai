@@ -1,0 +1,12 @@
+{
+  "name": "bonsai",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:Olical/bonsai.git",
+  "author": "Oliver Caldwell <olliec87@gmail.com>",
+  "license": "Unlicense",
+  "private": false,
+  "dependencies": {
+    "jsdom": "^11.6.2"
+  }
+}

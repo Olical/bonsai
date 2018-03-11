@@ -1,15 +1,12 @@
-.PHONY: run test pack deploy
+.PHONY: test test-clj test-cljs yarn-deps
 
-test:
-	clj -Atest
+test: test-clj test-cljs
 
-pack:
-	clj -Apack
+test-clj:
+	clojure -Atest-clj
 
-deploy: test pack
-	clj -Spom
-	mvn deploy:deploy-file \
-		-DpomFile=pom.xml \
-		-Dfile=dist/bonsai.jar \
-		-DrepositoryId=clojars \
-		-Durl=https://clojars.org/repo
+yarn-deps:
+	yarn
+
+test-cljs: yarn-deps
+	clojure -Atest-cljs
