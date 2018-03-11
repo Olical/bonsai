@@ -1,7 +1,10 @@
-.PHONY: yarn-deps test test-clj test-cljs
+.PHONY: yarn-deps dev test test-clj test-cljs
 
 yarn-deps:
 	yarn
+
+dev:
+	clojure -Adev
 
 test: test-clj test-cljs
 
