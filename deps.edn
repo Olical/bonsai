@@ -3,6 +3,7 @@
         orchestra {:mvn/version "2017.11.12-1"}}
  :aliases {:dev {:extra-paths ["dev"]
                  :extra-deps {expound {:mvn/version "0.5.0"}
+                              com.cemerick/piggieback {:mvn/version "0.2.2"}
                               org.clojure/tools.nrepl {:mvn/version "0.2.12"}
                               cider/cider-nrepl {:mvn/version "0.17.0-SNAPSHOT"}}
                  :main-opts ["-m" "bonsai.dev.cider"]}
