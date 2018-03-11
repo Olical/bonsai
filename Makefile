@@ -1,12 +1,12 @@
-.PHONY: test test-clj test-cljs yarn-deps
-
-test: test-clj test-cljs
-
-test-clj:
-	clojure -Atest-clj
+.PHONY: yarn-deps test test-clj test-cljs
 
 yarn-deps:
 	yarn
 
+test: test-clj test-cljs
+
+test-clj:
+	clojure -Adev:test-clj
+
 test-cljs: yarn-deps
-	clojure -Atest-cljs
+	clojure -Adev:test-cljs
