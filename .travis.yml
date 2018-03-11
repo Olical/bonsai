@@ -11,4 +11,5 @@ cache:
   directories:
     - $HOME/.m2
     - node_modules
+    - .cpcache
     - cljs-test-runner-out
