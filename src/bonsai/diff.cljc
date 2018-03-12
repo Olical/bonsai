@@ -8,12 +8,37 @@
                                          :children (s/* ::tree)))
                      :nodes (s/coll-of ::tree))))
 
-(s/conform ::tree (list [:p]))
+(s/def ::op #{:add :remove})
+(s/def ::path (s/coll-of integer? :kind vector?))
+(s/def ::changes (s/coll-of (s/keys :req [::op ::path]
+                                    :opt [::tree])
+                            :kind vector?))
 
-(s/def ::change vector?)
+(defn-spec ->nodes ::tree
+  [tree ::tree]
+  (if (keyword? (first tree))
+    [tree]
+    tree))
 
-(defn-spec diff ::change
+(defn-spec diff ::changes
   "Find the changes between two trees."
   [from ::tree, to ::tree]
-  (loop [acc []]
-    acc))
+  (loop [[from & next-from] (->nodes from)
+         [to & next-to] (->nodes to)
+         path []
+         index 0
+         acc []]
+    (if (= from to nil)
+      acc
+      (recur next-from
+             next-to
+             path
+             (inc index)
+             (let [path (conj path index)]
+               (cond
+                 (= to from) acc
+                 (= to nil) (conj acc {::op :remove
+                                       ::path path})
+                 (= from nil) (conj acc {::op :add
+                                         ::path path
+                                         ::tree to})))))))
