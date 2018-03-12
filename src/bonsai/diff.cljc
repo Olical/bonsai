@@ -1,10 +1,16 @@
 (ns bonsai.diff
-  (:require [orchestra.core #?(:clj :refer, :cljs :refer-macros) [defn-spec]]))
+  (:require [orchestra.core #?(:clj :refer, :cljs :refer-macros) [defn-spec]]
+            [#?(:clj clojure.spec.alpha, :cljs cljs.spec.alpha) :as s]))
 
-(defn-spec add integer?
-  [a integer?, b integer?]
-  (+ a b))
+(s/def ::node (s/nilable
+               (s/and vector?
+                      (s/cat :name keyword?
+                             :children (s/* ::node)))))
 
-(defn-spec -main nil?
-  []
-  (println "Hello, World!"))
+(s/def ::change vector?)
+
+(defn-spec diff ::change
+  "Find the changes between two trees."
+  [from ::node, to ::node]
+  (loop [acc []]
+    acc))
