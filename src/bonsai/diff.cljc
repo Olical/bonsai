@@ -14,17 +14,21 @@
                                     :opt [::tree])
                             :kind vector?))
 
-(defn-spec ->nodes ::tree
+;; TODO Handle flattening of seqs of seqs of seqs too?
+;; This could do all normalising in one step so we know we always have:
+;; [node, node, node...]
+(defn-spec normalise ::tree
+  "Coerce a valid tree into a seq of nodes."
   [tree ::tree]
   (if (keyword? (first tree))
-    [tree]
+    (list tree)
     tree))
 
 (defn-spec diff ::changes
   "Find the changes between two trees."
   [from ::tree, to ::tree]
-  (loop [[from & next-from] (->nodes from)
-         [to & next-to] (->nodes to)
+  (loop [[from & next-from] (normalise from)
+         [to & next-to] (normalise to)
          path []
          index 0
          acc []]
