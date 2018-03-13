@@ -19,4 +19,4 @@
   (t/testing "nodes can be added"
     (t/is (= (sut/diff nil [:p]) [{::sut/op :add
                                    ::sut/path [0]
-                                   ::sut/tree [:p]}]))))
+                                   ::sut/node [:p]}]))))

@@ -2,33 +2,22 @@
   (:require [orchestra.core #?(:clj :refer, :cljs :refer-macros) [defn-spec]]
             [#?(:clj clojure.spec.alpha, :cljs cljs.spec.alpha) :as s]))
 
-(s/def ::tree (s/nilable
-               (s/or :node (s/and vector?
-                                  (s/cat :name keyword?
-                                         :children (s/* ::tree)))
-                     :nodes (s/coll-of ::tree))))
+(s/def ::node (s/nilable
+               (s/and vector?
+                      (s/cat :name keyword?
+                             :children (s/* ::node)))))
 
 (s/def ::op #{:add :remove})
 (s/def ::path (s/coll-of integer? :kind vector?))
 (s/def ::changes (s/coll-of (s/keys :req [::op ::path]
-                                    :opt [::tree])
+                                    :opt [::node])
                             :kind vector?))
-
-;; TODO Handle flattening of seqs of seqs of seqs too?
-;; This could do all normalising in one step so we know we always have:
-;; [node, node, node...]
-(defn-spec normalise ::tree
-  "Coerce a valid tree into a seq of nodes."
-  [tree ::tree]
-  (if (keyword? (first tree))
-    (list tree)
-    tree))
 
 (defn-spec diff ::changes
   "Find the changes between two trees."
-  [from ::tree, to ::tree]
-  (loop [[from & next-from] (normalise from)
-         [to & next-to] (normalise to)
+  [from ::node, to ::node]
+  (loop [[from & next-from] [from]
+         [to & next-to] [to]
          path []
          index 0
          acc []]
@@ -45,4 +34,4 @@
                                        ::path path})
                  (= from nil) (conj acc {::op :add
                                          ::path path
-                                         ::tree to})))))))
+                                         ::node to})))))))
