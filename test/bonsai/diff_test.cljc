@@ -8,15 +8,12 @@
 (st/instrument)
 (set! s/*explain-out* expound/printer)
 
-(t/deftest diff
+(t/deftest changes
   (t/testing "empty trees yield no changes"
-    (t/is (= (sut/diff nil nil) [])))
+    (t/is (= (sut/changes nil nil) [])))
   (t/testing "identical trees yield no changes"
-    (t/is (= (sut/diff [:p] [:p]) [])))
+    (t/is (= (sut/changes [[:p]] [[:p]]) [])))
   (t/testing "nodes can be removed"
-    (t/is (= (sut/diff [:p] nil) [{::sut/op :remove
-                                   ::sut/path [0]}])))
+    (t/is (= (sut/changes [[:p]] nil) [[::sut/remove {::sut/path [0]}]])))
   (t/testing "nodes can be added"
-    (t/is (= (sut/diff nil [:p]) [{::sut/op :add
-                                   ::sut/path [0]
-                                   ::sut/node [:p]}]))))
+    (t/is (= (sut/changes nil [[:p]]) [[::sut/add {::sut/path [0], ::sut/node [:p]}]]))))
