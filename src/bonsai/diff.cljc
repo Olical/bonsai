@@ -30,19 +30,26 @@
   [node ::tree]
   (rest node))
 
-(defn-spec changes ::changes
-  "Find the changes between two trees."
-  [x ::tree, y ::tree]
-  (loop [xs [x]
-         ys [y]
-         path []
-         acc []]
+(defn- changes* [{:keys [xs ys path]} frames acc]
+  (loop [xs xs
+         ys ys
+         index 0
+         frames frames
+         acc acc]
     (if (or (seq xs) (seq ys))
       (let [[x & xs] xs
-            [y & ys] ys]
-        (recur (concat xs (children x))
-               (concat ys (children y))
-               path
+            [y & ys] ys
+            xcs (children x)
+            ycs (children y)
+            path (conj path index)]
+        (recur xs
+               ys
+               (inc index)
+               (if (= xcs ycs)
+                 frames
+                 (conj frames {:xs xcs
+                               :ys ycs
+                               :path path}))
                (cond
                  (= (kind x) (kind y))
                  acc
@@ -60,4 +67,15 @@
                  (conj acc {::op ::replace-node
                             ::path path
                             ::kind (kind y)}))))
+      {:frames frames
+       :acc acc})))
+
+(defn-spec changes ::changes
+  "Find the changes between two trees."
+  [x ::tree, y ::tree]
+  (loop [[{:keys [xs ys path] :as frame} & frames] [{:xs [x], :ys [y], :path []}]
+         acc []]
+    (if frame
+      (let [{:keys [frames acc]} (changes* frame frames acc)]
+        (recur frames acc))
       acc)))
