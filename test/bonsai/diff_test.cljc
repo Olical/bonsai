@@ -25,4 +25,20 @@
                           [:div [:ol [:li] [:li]]])
              [{::sut/op ::sut/replace-node
                ::sut/path []
-               ::sut/kind :ol}]))))
+               ::sut/kind :ol}])))
+  (t/testing "growing"
+    (t/is (= (sut/changes [:ul [:li]]
+                          [:ul [:li] [:li] [:li]])
+             [{::sut/op ::sut/insert-node
+               ::sut/path []
+               ::sut/kind :li}
+              {::sut/op ::sut/insert-node
+               ::sut/path []
+               ::sut/kind :li}])))
+  (t/testing "shrinking"
+    (t/is (= (sut/changes [:ul [:li] [:li] [:li]]
+                          [:ul [:li]])
+             [{::sut/op ::sut/remove-node
+               ::sut/path []}
+              {::sut/op ::sut/remove-node
+               ::sut/path []}]))))
