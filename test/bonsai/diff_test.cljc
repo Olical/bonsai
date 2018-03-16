@@ -14,7 +14,9 @@
   (t/testing "identical trees yield no changes"
     (t/is (= (sut/changes [[:p]] [[:p]]) [])))
   (t/testing "nodes can be removed"
-    (t/is (= (sut/changes [[:p]] nil) [[::sut/remove-node {::sut/path [0]}]])))
+    (t/is (= (sut/changes [[:p]] nil) [{::sut/op ::sut/remove-node
+                                        ::sut/path [0]}])))
   (t/testing "nodes can be added"
-    (t/is (= (sut/changes nil [[:p]]) [[::sut/insert-node {::sut/path [0]
-                                                           ::sut/node [:p]}]]))))
+    (t/is (= (sut/changes nil [[:p]]) [{::sut/op ::sut/insert-node
+                                        ::sut/path [0]
+                                        ::sut/kind :p}]))))
