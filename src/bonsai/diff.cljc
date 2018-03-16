@@ -3,10 +3,9 @@
             [#?(:clj clojure.spec.alpha, :cljs cljs.spec.alpha) :as s]))
 
 (s/def ::kind keyword?)
-(s/def ::tree (s/or :nothing nil?
-                    :node (s/cat :kind ::kind
-                                 :children (s/* ::tree))
-                    :nodes (s/coll-of ::tree)))
+(s/def ::tree (s/nilable
+               (s/cat :kind ::kind
+                      :children (s/* ::tree))))
 
 (defmulti change ::op)
 (defmethod change ::insert-node [_]
