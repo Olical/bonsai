@@ -41,4 +41,26 @@
              [{::sut/op ::sut/remove-node
                ::sut/path []}
               {::sut/op ::sut/remove-node
-               ::sut/path []}]))))
+               ::sut/path []}])))
+
+  ;; Flipping something to and from nil is fast.
+  (t/testing "inserting by replacing a nil is calm"
+    (t/is (= (sut/changes [:ul [:a] nil [:c] [:d]]
+                          [:ul [:a] [:b] [:c] [:d]])
+             [{::sut/op ::sut/insert-node
+               ::sut/path []
+               ::sut/kind :b}])))
+
+  ;; Inserting new things or removing things completely is slow.
+  (t/testing "inserting without replacing a nil is violent"
+    (t/is (= (sut/changes [:ul [:a] [:c] [:d]]
+                          [:ul [:a] [:b] [:c] [:d]])
+             [{::sut/op ::sut/replace-node
+               ::sut/path []
+               ::sut/kind :b}
+              {::sut/op ::sut/replace-node
+               ::sut/path []
+               ::sut/kind :c}
+              {::sut/op ::sut/insert-node
+               ::sut/path []
+               ::sut/kind :d}]))))
