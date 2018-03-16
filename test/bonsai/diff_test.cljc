@@ -15,8 +15,14 @@
     (t/is (= (sut/changes [:p] [:p]) [])))
   (t/testing "nodes can be removed"
     (t/is (= (sut/changes [:p] nil) [{::sut/op ::sut/remove-node
-                                        ::sut/path [0]}])))
+                                      ::sut/path []}])))
   (t/testing "nodes can be added"
     (t/is (= (sut/changes nil [:p]) [{::sut/op ::sut/insert-node
-                                        ::sut/path [0]
-                                        ::sut/kind :p}]))))
+                                      ::sut/path []
+                                      ::sut/kind :p}])))
+  (t/testing "nodes can be replaced"
+    (t/is (= (sut/changes [:div [:ul [:li] [:li]]]
+                          [:div [:ol [:li] [:li]]])
+             [{::sut/op ::sut/replace-node
+               ::sut/path []
+               ::sut/kind :ol}]))))
