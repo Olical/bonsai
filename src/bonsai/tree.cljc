@@ -47,7 +47,9 @@
                      :else :replace)]
         (recur xs
                ys
-               (inc index)
+               (if (nil? y)
+                 index
+                 (inc index))
                (cond
                  (= action :replace) (conj frames {:xs nil
                                                   :ys ycs
