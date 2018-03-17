@@ -70,8 +70,7 @@
                                 {::op ::insert-node
                                  ::path path
                                  ::kind (kind y)}))))
-      {:frames frames
-       :acc acc})))
+      [frames acc])))
 
 (defn-spec diff ::diff
   "Find the diff between two trees."
@@ -79,6 +78,6 @@
   (loop [[{:keys [xs ys path] :as frame} & frames] [{:xs [x], :ys [y], :path []}]
          acc []]
     (if frame
-      (let [{:keys [frames acc]} (diff* frame frames acc)]
+      (let [[frames acc] (diff* frame frames acc)]
         (recur frames acc))
       acc)))
