@@ -13,8 +13,6 @@
   (s/keys :req [::op ::path ::kind]))
 (defmethod change ::remove-node [_]
   (s/keys :req [::op ::path]))
-(defmethod change ::replace-node [_]
-  (s/keys :req [::op ::path ::kind]))
 
 (s/def ::path (s/coll-of integer? :kind vector?))
 (s/def ::change (s/multi-spec change ::op))
@@ -41,32 +39,36 @@
             [y & ys] ys
             xcs (children x)
             ycs (children y)
-            path (conj path index)]
+            path (conj path index)
+            action (cond
+                     (= (kind x) (kind y)) :skip
+                     (nil? x) :insert
+                     (nil? y) :remove
+                     :else :replace)]
         (recur xs
                ys
                (inc index)
-               (if (= xcs ycs)
-                 frames
-                 (conj frames {:xs xcs
-                               :ys ycs
-                               :path path}))
                (cond
-                 (= (kind x) (kind y))
-                 acc
-
-                 (nil? x)
-                 (conj acc {::op ::insert-node
-                            ::path path
-                            ::kind (kind y)})
-
-                 (nil? y)
-                 (conj acc {::op ::remove-node
-                            ::path path})
-
-                 :else
-                 (conj acc {::op ::replace-node
-                            ::path path
-                            ::kind (kind y)}))))
+                 (= action :replace) (conj frames {:xs nil
+                                                  :ys ycs
+                                                  :path path})
+                 (= xcs ycs) frames
+                 :else (conj frames {:xs xcs
+                                     :ys ycs
+                                     :path path}))
+               (case action
+                 :skip acc
+                 :insert (conj acc {::op ::insert-node
+                                    ::path path
+                                    ::kind (kind y)})
+                 :remove (conj acc {::op ::remove-node
+                                    ::path path})
+                 :replace (conj acc
+                                {::op ::remove-node
+                                 ::path path}
+                                {::op ::insert-node
+                                 ::path path
+                                 ::kind (kind y)}))))
       {:frames frames
        :acc acc})))
 
