@@ -1,4 +1,4 @@
-(ns bonsai.diff
+(ns bonsai.tree
   (:require [orchestra.core #?(:clj :refer, :cljs :refer-macros) [defn-spec]]
             [#?(:clj clojure.spec.alpha, :cljs cljs.spec.alpha) :as s]))
 
