@@ -94,4 +94,16 @@
                ::sut/path [0 2]
                ::sut/kind :e}]
              (sut/diff [:ul [:a] nil [:c] nil nil [:f]]
-                       [:ul [:a] [:b] nil nil [:e] [:f]])))))
+                       [:ul [:a] [:b] nil nil [:e] [:f]]))))
+  (t/testing "nodes can be strings"
+    (t/is (= [{::sut/op ::sut/insert-text-node
+               ::sut/path [0]
+               ::sut/text "Hello, World!"}]
+             (sut/diff nil "Hello, World!")))
+    (t/is (= [{::sut/op ::sut/remove-node
+               ::sut/path [0 0]}
+              {::sut/op ::sut/insert-text-node
+               ::sut/path [0 0]
+               ::sut/text "world"}]
+             (sut/diff [:p "hello"]
+                       [:p "world"])))))

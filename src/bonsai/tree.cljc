@@ -3,9 +3,11 @@
             [#?(:clj clojure.spec.alpha, :cljs cljs.spec.alpha) :as s]))
 
 (s/def ::kind keyword?)
-(s/def ::tree (s/nilable
-               (s/cat :kind ::kind
-                      :children (s/* ::tree))))
+(s/def ::tree (s/or
+               :nothing nil?
+               :text string?
+               :node (s/cat :kind ::kind
+                            :children (s/* ::tree))))
 (s/def ::trees (s/* ::tree))
 
 (defmulti change ::op)
@@ -13,6 +15,8 @@
   (s/keys :req [::op ::path ::kind]))
 (defmethod change ::remove-node [_]
   (s/keys :req [::op ::path]))
+(defmethod change ::insert-text-node [_]
+  (s/keys :req [::op ::path ::text]))
 
 (s/def ::path (s/coll-of integer? :kind vector?))
 (s/def ::change (s/multi-spec change ::op))
@@ -21,12 +25,28 @@
 (defn-spec kind (s/nilable ::kind)
   "Get the kind of a node."
   [node ::tree]
-  (first node))
+  (cond
+    (string? node) ::text
+    :else (first node)))
 
 (defn-spec children ::trees
   "Get the children of a node, if any."
   [node ::tree]
-  (rest node))
+  (cond
+    (= (kind node) ::text) nil
+    :else (rest node)))
+
+(defn- insert-op [node path]
+  (merge {::path path}
+         (cond
+           (= (kind node) ::text) {::op ::insert-text-node
+                                   ::text node}
+           :else {::op ::insert-node
+                  ::kind (kind node)})))
+
+(defn- remove-op [node path]
+  {::op ::remove-node
+   ::path path})
 
 (defn- diff* [{:keys [xs ys path]} frames acc]
   (loop [xs xs
@@ -41,7 +61,8 @@
             ycs (children y)
             path (conj path index)
             action (cond
-                     (= (kind x) (kind y)) :skip
+                     (and (= (kind x) (kind y))
+                          (not= (kind x) ::text)) :skip
                      (nil? x) :insert
                      (nil? y) :remove
                      :else :replace)]
@@ -59,17 +80,9 @@
                                      :path path}))
                (case action
                  :skip acc
-                 :insert (conj acc {::op ::insert-node
-                                    ::path path
-                                    ::kind (kind y)})
-                 :remove (conj acc {::op ::remove-node
-                                    ::path path})
-                 :replace (conj acc
-                                {::op ::remove-node
-                                 ::path path}
-                                {::op ::insert-node
-                                 ::path path
-                                 ::kind (kind y)}))))
+                 :insert (conj acc (insert-op y path))
+                 :remove (conj acc (remove-op x path))
+                 :replace (conj acc (remove-op x path) (insert-op y path)))))
       [frames acc])))
 
 (defn-spec diff ::diff
