@@ -18,7 +18,7 @@
 
 (s/def ::path (s/coll-of integer? :kind vector?))
 (s/def ::change (s/multi-spec change ::op))
-(s/def ::changes (s/coll-of ::change :kind vector?))
+(s/def ::diff (s/coll-of ::change :kind vector?))
 
 (defn-spec kind (s/nilable ::kind)
   "Get the kind of a node."
@@ -30,7 +30,7 @@
   [node ::tree]
   (rest node))
 
-(defn- changes* [{:keys [xs ys path]} frames acc]
+(defn- diff* [{:keys [xs ys path]} frames acc]
   (loop [xs xs
          ys ys
          index 0
@@ -70,12 +70,12 @@
       {:frames frames
        :acc acc})))
 
-(defn-spec changes ::changes
-  "Find the changes between two trees."
+(defn-spec diff ::diff
+  "Find the diff between two trees."
   [x ::tree, y ::tree]
   (loop [[{:keys [xs ys path] :as frame} & frames] [{:xs [x], :ys [y], :path []}]
          acc []]
     (if frame
-      (let [{:keys [frames acc]} (changes* frame frames acc)]
+      (let [{:keys [frames acc]} (diff* frame frames acc)]
         (recur frames acc))
       acc)))

@@ -8,27 +8,27 @@
 (st/instrument)
 (set! s/*explain-out* expound/printer)
 
-(t/deftest changes
-  (t/testing "empty trees yield no changes"
-    (t/is (= (sut/changes nil nil) [])))
-  (t/testing "identical trees yield no changes"
-    (t/is (= (sut/changes [:p] [:p]) [])))
+(t/deftest diff
+  (t/testing "empty trees yield no diff"
+    (t/is (= (sut/diff nil nil) [])))
+  (t/testing "identical trees yield no diff"
+    (t/is (= (sut/diff [:p] [:p]) [])))
   (t/testing "nodes can be removed"
-    (t/is (= (sut/changes [:p] nil) [{::sut/op ::sut/remove-node
-                                      ::sut/path [0]}])))
+    (t/is (= (sut/diff [:p] nil) [{::sut/op ::sut/remove-node
+                                   ::sut/path [0]}])))
   (t/testing "nodes can be added"
-    (t/is (= (sut/changes nil [:p]) [{::sut/op ::sut/insert-node
-                                      ::sut/path [0]
-                                      ::sut/kind :p}])))
+    (t/is (= (sut/diff nil [:p]) [{::sut/op ::sut/insert-node
+                                   ::sut/path [0]
+                                   ::sut/kind :p}])))
   (t/testing "nodes can be replaced"
-    (t/is (= (sut/changes [:div [:ul [:li] [:li]]]
-                          [:div [:ol [:li] [:li]]])
+    (t/is (= (sut/diff [:div [:ul [:li] [:li]]]
+                       [:div [:ol [:li] [:li]]])
              [{::sut/op ::sut/replace-node
                ::sut/path [0 0]
                ::sut/kind :ol}])))
   (t/testing "growing"
-    (t/is (= (sut/changes [:ul [:li]]
-                          [:ul [:li] [:li] [:li]])
+    (t/is (= (sut/diff [:ul [:li]]
+                       [:ul [:li] [:li] [:li]])
              [{::sut/op ::sut/insert-node
                ::sut/path [0 1]
                ::sut/kind :li}
@@ -36,8 +36,8 @@
                ::sut/path [0 2]
                ::sut/kind :li}])))
   (t/testing "shrinking"
-    (t/is (= (sut/changes [:ul [:li] [:li] [:li]]
-                          [:ul [:li]])
+    (t/is (= (sut/diff [:ul [:li] [:li] [:li]]
+                       [:ul [:li]])
              [{::sut/op ::sut/remove-node
                ::sut/path [0 1]}
               {::sut/op ::sut/remove-node
@@ -45,16 +45,16 @@
 
   ;; Flipping something to and from nil is fast.
   (t/testing "inserting by replacing a nil is calm"
-    (t/is (= (sut/changes [:ul [:a] nil [:c] [:d]]
-                          [:ul [:a] [:b] [:c] [:d]])
+    (t/is (= (sut/diff [:ul [:a] nil [:c] [:d]]
+                       [:ul [:a] [:b] [:c] [:d]])
              [{::sut/op ::sut/insert-node
                ::sut/path [0 1]
                ::sut/kind :b}])))
 
   ;; Inserting new things or removing things completely is slow.
   (t/testing "inserting without replacing a nil is violent"
-    (t/is (= (sut/changes [:ul [:a] [:c] [:d]]
-                          [:ul [:a] [:b] [:c] [:d]])
+    (t/is (= (sut/diff [:ul [:a] [:c] [:d]]
+                       [:ul [:a] [:b] [:c] [:d]])
              [{::sut/op ::sut/replace-node
                ::sut/path [0 1]
                ::sut/kind :b}
