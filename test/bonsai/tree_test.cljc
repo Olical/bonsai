@@ -83,4 +83,15 @@
                ::sut/path [0 2]
                ::sut/kind :d}]
              (sut/diff [:ul [:a] [:b] [:c]]
-                       [:ul [:a] nil [:c] [:d]])))))
+                       [:ul [:a] nil [:c] [:d]]))))
+  (t/testing "flipping multiple nils is detected"
+    (t/is (= [{::sut/op ::sut/insert-node
+               ::sut/path [0 1]
+               ::sut/kind :b}
+              {::sut/op ::sut/remove-node
+               ::sut/path [0 2]}
+              {::sut/op ::sut/insert-node
+               ::sut/path [0 2]
+               ::sut/kind :e}]
+             (sut/diff [:ul [:a] nil [:c] nil nil [:f]]
+                       [:ul [:a] [:b] nil nil [:e] [:f]])))))
