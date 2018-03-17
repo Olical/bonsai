@@ -6,7 +6,7 @@
 (s/def ::tree (s/nilable
                (s/cat :kind ::kind
                       :children (s/* ::tree))))
-(s/def ::children (s/* ::tree))
+(s/def ::trees (s/* ::tree))
 
 (defmulti change ::op)
 (defmethod change ::insert-node [_]
@@ -25,7 +25,7 @@
   [node ::tree]
   (first node))
 
-(defn-spec children ::children
+(defn-spec children ::trees
   "Get the children of a node, if any."
   [node ::tree]
   (rest node))
