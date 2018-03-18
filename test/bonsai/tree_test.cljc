@@ -106,4 +106,18 @@
                ::sut/path [0 0]
                ::sut/text "world"}]
              (sut/diff [:p "hello"]
-                       [:p "world"])))))
+                       [:p "world"]))))
+  (t/testing "toggling with text nodes"
+    (t/is (= [{::sut/path [0 1]
+               ::sut/op ::sut/insert-node
+               ::sut/kind :li}
+              {::sut/path [0 2 0]
+               ::sut/op ::sut/insert-text-node,
+               ::sut/text "c"}
+              {::sut/path [0 1 0]
+               ::sut/op ::sut/insert-text-node
+               ::sut/text "b"}
+              {::sut/op ::sut/remove-node
+               ::sut/path [0 0 0]}]
+             (sut/diff [:ul [:li "a"] nil [:li nil]]
+                       [:ul [:li nil] [:li "b"] [:li "c"]])))))
