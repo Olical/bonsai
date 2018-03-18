@@ -108,6 +108,7 @@
              (sut/diff [:p "hello"]
                        [:p "world"]))))
   (t/testing "toggling with text nodes"
+    ;; I don't actually know why they come out in this order, would be good to work out.
     (t/is (= [{::sut/path [0 1]
                ::sut/op ::sut/insert-node
                ::sut/kind :li}
