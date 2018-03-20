@@ -6,7 +6,8 @@
                :void nil?
                :text ::text
                :node (s/cat :kind ::kind
-                            :children (s/* ::tree))))
+                            :children ::trees)))
+(s/def ::trees (s/* ::tree))
 
 (defmulti change ::op)
 (defmethod change ::insert-node [_]
@@ -21,12 +22,17 @@
 (s/def ::text string?)
 (s/def ::path (s/coll-of integer? :kind vector?))
 (s/def ::change (s/multi-spec change ::op))
+(s/def ::changes (s/* ::change))
+(s/def ::xs ::trees)
+(s/def ::ys ::trees)
+(s/def ::group (s/keys :req [::xs ::ys ::path]))
+(s/def ::groups (s/* ::group))
 
 (defn-spec kind (s/nilable ::kind)
   [node ::tree]
   (first node))
 
-(defn-spec children (s/* ::tree)
+(defn-spec children ::trees
   [node ::tree]
   (next node))
 
@@ -50,13 +56,14 @@
     ::path path
     ::dry? (boolean dry?)}))
 
-(defn- diff-group [{:keys [xs ys path]} groups acc]
+(defn-spec diff-group (s/tuple ::groups ::changes)
+  [{:keys [::xs ::ys ::path]} ::group, groups (s/spec ::groups), changes (s/spec ::changes)]
   (let [dry? (nil? ys)]
     (loop [xs xs
            ys ys
            index 0
            groups groups
-           acc acc]
+           changes changes]
       (if (or (seq xs) (seq ys))
         (let [[x & xs] xs
               [y & ys] ys
@@ -75,27 +82,27 @@
                  (cond-> index
                    y inc)
                  (cond
-                   (= action :replace) (conj groups {:xs nil
-                                                     :ys ycs
-                                                     :path path})
+                   (= action :replace) (conj groups {::xs nil
+                                                     ::ys ycs
+                                                     ::path path})
                    (= xcs ycs) groups
-                   :else (conj groups {:xs xcs
-                                       :ys ycs
-                                       :path path}))
+                   :else (conj groups {::xs xcs
+                                       ::ys ycs
+                                       ::path path}))
                  (case action
-                   :skip acc
-                   :insert (conj acc (insert-node-op path yk))
-                   :remove (conj acc (remove-node-op path dry?))
-                   :replace (conj acc
+                   :skip changes
+                   :insert (conj changes (insert-node-op path yk))
+                   :remove (conj changes (remove-node-op path dry?))
+                   :replace (conj changes
                                   (remove-node-op path dry?)
                                   (insert-node-op path yk)))))
-        [groups acc]))))
+        [groups changes]))))
 
-(defn-spec diff (s/* ::change)
+(defn-spec diff ::changes
   [x ::tree, y ::tree]
-  (loop [[{:keys [xs ys path] :as group} & groups] [{:xs [x], :ys [y], :path []}]
-         acc []]
+  (loop [[group & groups] [{::xs [x], ::ys [y], ::path []}]
+         changes []]
     (if group
-      (let [[groups acc] (diff-group group groups acc)]
-        (recur groups acc))
-      acc)))
+      (let [[groups changes] (diff-group group groups changes)]
+        (recur groups changes))
+      changes)))
