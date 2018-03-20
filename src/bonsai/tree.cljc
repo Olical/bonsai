@@ -57,7 +57,9 @@
     ::dry? (boolean dry?)}))
 
 (defn-spec diff-group (s/tuple ::groups ::changes)
-  [{:keys [::xs ::ys ::path]} ::group, groups (s/spec ::groups), changes (s/spec ::changes)]
+  [{:keys [::xs ::ys ::path]} ::group
+   groups (s/spec ::groups)
+   changes (s/spec ::changes)]
   (let [dry? (nil? ys)]
     (loop [xs xs
            ys ys
