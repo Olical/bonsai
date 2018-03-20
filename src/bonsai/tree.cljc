@@ -48,7 +48,7 @@
   {::op ::remove-node
    ::path path})
 
-(defn- diff* [{:keys [xs ys path]} groups acc]
+(defn- diff-group [{:keys [xs ys path]} groups acc]
   (loop [xs xs
          ys ys
          index 0
@@ -91,6 +91,6 @@
   (loop [[{:keys [xs ys path] :as group} & groups] [{:xs [x], :ys [y], :path []}]
          acc []]
     (if group
-      (let [[groups acc] (diff* group groups acc)]
+      (let [[groups acc] (diff-group group groups acc)]
         (recur groups acc))
       acc)))
