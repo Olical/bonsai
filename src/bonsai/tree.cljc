@@ -86,7 +86,9 @@
                    :skip acc
                    :insert (conj acc (insert-node-op path yk))
                    :remove (conj acc (remove-node-op path dry?))
-                   :replace (conj acc (remove-node-op path dry?) (insert-node-op path yk)))))
+                   :replace (conj acc
+                                  (remove-node-op path dry?)
+                                  (insert-node-op path yk)))))
         [groups acc]))))
 
 (defn-spec diff (s/* ::change)

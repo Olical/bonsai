@@ -19,9 +19,7 @@
     (t/is (= [(sut/remove-node-op [0])]
              (sut/diff [:p] nil))))
   (t/testing "nodes can be added"
-    (t/is (= [{::sut/op ::sut/insert-node
-               ::sut/path [0]
-               ::sut/kind :p}]
+    (t/is (= [(sut/insert-node-op [0] :p)]
              (sut/diff nil [:p]))))
   (t/testing "nodes can be replaced (remove then insert)"
     (t/is (= [(sut/remove-node-op [0 0])
