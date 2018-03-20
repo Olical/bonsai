@@ -3,43 +3,46 @@
             [#?(:clj clojure.spec.alpha, :cljs cljs.spec.alpha) :as s]))
 
 (s/def ::tree (s/or
-               :nothing nil?
-               :text string?
+               :void nil?
+               :text ::text
                :node (s/cat :kind ::kind
                             :children (s/* ::tree))))
 
 (defmulti change ::op)
 (defmethod change ::insert-node [_]
   (s/keys :req [::op ::path ::kind]))
+(defmethod change ::insert-text [_]
+  (s/keys :req [::op ::path ::text]))
 (defmethod change ::remove-node [_]
   (s/keys :req [::op ::path ::dry?]))
-(defmethod change ::insert-text-node [_]
-  (s/keys :req [::op ::path ::text]))
 
 (s/def ::dry? boolean?)
 (s/def ::kind keyword?)
+(s/def ::text string?)
 (s/def ::path (s/coll-of integer? :kind vector?))
 (s/def ::change (s/multi-spec change ::op))
 
 (defn-spec kind (s/nilable ::kind)
-  "Get the kind of a node."
   [node ::tree]
   (first node))
 
 (defn-spec children (s/* ::tree)
-  "Get the children of a node, if any."
   [node ::tree]
   (next node))
 
 (defn-spec insert-node-op ::change
-  "Build an insert change map."
   [path ::path, kind ::kind]
   {::op ::insert-node
    ::path path
    ::kind kind})
 
+(defn-spec insert-text-op ::change
+  [path ::path, text ::text]
+  {::op ::insert-text
+   ::path path
+   ::text text})
+
 (defn-spec remove-node-op ::change
-  "Build a remove change map."
   ([path ::path]
    (remove-node-op path false))
   ([path ::path, dry? ::dry?]
@@ -87,7 +90,6 @@
         [groups acc]))))
 
 (defn-spec diff (s/* ::change)
-  "Find the diff between two trees."
   [x ::tree, y ::tree]
   (loop [[{:keys [xs ys path] :as group} & groups] [{:xs [x], :ys [y], :path []}]
          acc []]
