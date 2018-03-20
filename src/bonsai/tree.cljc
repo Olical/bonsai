@@ -12,7 +12,7 @@
 (defmethod change ::insert-node [_]
   (s/keys :req [::op ::path ::kind]))
 (defmethod change ::remove-node [_]
-  (s/keys :req [::op ::path] :opt [::dry?]))
+  (s/keys :req [::op ::path ::dry?]))
 (defmethod change ::insert-text-node [_]
   (s/keys :req [::op ::path ::text]))
 
@@ -31,16 +31,21 @@
   [node ::tree]
   (next node))
 
-(defn- insert-op [path kind]
+(defn-spec insert-node-op ::change
+  "Build an insert change map."
+  [path ::path, kind ::kind]
   {::op ::insert-node
    ::path path
    ::kind kind})
 
-(defn- remove-op [path dry?]
-  (merge {::op ::remove-node
-          ::path path}
-         (when dry?
-           {::dry? true})))
+(defn-spec remove-node-op ::change
+  "Build a remove change map."
+  ([path ::path]
+   (remove-node-op path false))
+  ([path ::path, dry? ::dry?]
+   {::op ::remove-node
+    ::path path
+    ::dry? (boolean dry?)}))
 
 (defn- diff-group [{:keys [xs ys path]} groups acc]
   (let [dry? (nil? ys)]
@@ -76,9 +81,9 @@
                                        :path path}))
                  (case action
                    :skip acc
-                   :insert (conj acc (insert-op path yk))
-                   :remove (conj acc (remove-op path dry?))
-                   :replace (conj acc (remove-op path dry?) (insert-op path yk)))))
+                   :insert (conj acc (insert-node-op path yk))
+                   :remove (conj acc (remove-node-op path dry?))
+                   :replace (conj acc (remove-node-op path dry?) (insert-node-op path yk)))))
         [groups acc]))))
 
 (defn-spec diff (s/* ::change)
