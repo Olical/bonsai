@@ -10,6 +10,8 @@ jdk:
 cache:
   directories:
     - $HOME/.m2
+    - $HOME/.cljs
+    - $HOME/.gitlibs
     - node_modules
     - .cpcache
     - cljs-test-runner-out
