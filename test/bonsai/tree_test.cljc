@@ -95,7 +95,7 @@
                ::sut/kind :e}]
              (sut/diff [:ul [:a] nil [:c] nil nil [:f]]
                        [:ul [:a] [:b] nil nil [:e] [:f]]))))
-  (t/testing "nodes can be strings"
+  #_(t/testing "nodes can be strings"
     (t/is (= [{::sut/op ::sut/insert-text-node
                ::sut/path [0]
                ::sut/text "Hello, World!"}]
@@ -107,7 +107,7 @@
                ::sut/text "world"}]
              (sut/diff [:p "hello"]
                        [:p "world"]))))
-  (t/testing "toggling with text nodes"
+  #_(t/testing "toggling with text nodes"
     ;; I don't actually know why they come out in this order, would be good to work out.
     (t/is (= [{::sut/path [0 1]
                ::sut/op ::sut/insert-node

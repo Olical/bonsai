@@ -2,13 +2,11 @@
   (:require [orchestra.core #?(:clj :refer, :cljs :refer-macros) [defn-spec]]
             [#?(:clj clojure.spec.alpha, :cljs cljs.spec.alpha) :as s]))
 
-(s/def ::kind keyword?)
 (s/def ::tree (s/or
                :nothing nil?
                :text string?
                :node (s/cat :kind ::kind
                             :children (s/* ::tree))))
-(s/def ::trees (s/* ::tree))
 
 (defmulti change ::op)
 (defmethod change ::insert-node [_]
@@ -18,33 +16,26 @@
 (defmethod change ::insert-text-node [_]
   (s/keys :req [::op ::path ::text]))
 
+(s/def ::kind keyword?)
 (s/def ::path (s/coll-of integer? :kind vector?))
 (s/def ::change (s/multi-spec change ::op))
-(s/def ::diff (s/coll-of ::change :kind vector?))
 
 (defn-spec kind (s/nilable ::kind)
   "Get the kind of a node."
   [node ::tree]
-  (cond
-    (string? node) ::text
-    :else (first node)))
+  (first node))
 
-(defn-spec children ::trees
+(defn-spec children (s/* ::tree)
   "Get the children of a node, if any."
   [node ::tree]
-  (cond
-    (= (kind node) ::text) nil
-    :else (rest node)))
+  (rest node))
 
-(defn- insert-op [node path]
-  (merge {::path path}
-         (cond
-           (= (kind node) ::text) {::op ::insert-text-node
-                                   ::text node}
-           :else {::op ::insert-node
-                  ::kind (kind node)})))
+(defn- insert-op [path kind]
+  {::op ::insert-node
+   ::path path
+   ::kind kind})
 
-(defn- remove-op [node path]
+(defn- remove-op [path]
   {::op ::remove-node
    ::path path})
 
@@ -57,12 +48,13 @@
     (if (or (seq xs) (seq ys))
       (let [[x & xs] xs
             [y & ys] ys
+            xk (kind x)
+            yk (kind y)
             xcs (children x)
             ycs (children y)
             path (conj path index)
             action (cond
-                     (and (= (kind x) (kind y))
-                          (not= (kind x) ::text)) :skip
+                     (= xk yk) :skip
                      (nil? x) :insert
                      (nil? y) :remove
                      :else :replace)]
@@ -80,12 +72,12 @@
                                      :path path}))
                (case action
                  :skip acc
-                 :insert (conj acc (insert-op y path))
-                 :remove (conj acc (remove-op x path))
-                 :replace (conj acc (remove-op x path) (insert-op y path)))))
+                 :insert (conj acc (insert-op path yk))
+                 :remove (conj acc (remove-op path))
+                 :replace (conj acc (remove-op path) (insert-op path yk)))))
       [groups acc])))
 
-(defn-spec diff ::diff
+(defn-spec diff (s/* ::change)
   "Find the diff between two trees."
   [x ::tree, y ::tree]
   (loop [[{:keys [xs ys path] :as group} & groups] [{:xs [x], :ys [y], :path []}]
