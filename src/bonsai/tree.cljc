@@ -48,11 +48,11 @@
   {::op ::remove-node
    ::path path})
 
-(defn- diff* [{:keys [xs ys path]} frames acc]
+(defn- diff* [{:keys [xs ys path]} groups acc]
   (loop [xs xs
          ys ys
          index 0
-         frames frames
+         groups groups
          acc acc]
     (if (or (seq xs) (seq ys))
       (let [[x & xs] xs
@@ -71,11 +71,11 @@
                (cond-> index
                  y inc)
                (cond
-                 (= action :replace) (conj frames {:xs nil
+                 (= action :replace) (conj groups {:xs nil
                                                   :ys ycs
                                                   :path path})
-                 (= xcs ycs) frames
-                 :else (conj frames {:xs xcs
+                 (= xcs ycs) groups
+                 :else (conj groups {:xs xcs
                                      :ys ycs
                                      :path path}))
                (case action
@@ -83,14 +83,14 @@
                  :insert (conj acc (insert-op y path))
                  :remove (conj acc (remove-op x path))
                  :replace (conj acc (remove-op x path) (insert-op y path)))))
-      [frames acc])))
+      [groups acc])))
 
 (defn-spec diff ::diff
   "Find the diff between two trees."
   [x ::tree, y ::tree]
-  (loop [[{:keys [xs ys path] :as frame} & frames] [{:xs [x], :ys [y], :path []}]
+  (loop [[{:keys [xs ys path] :as group} & groups] [{:xs [x], :ys [y], :path []}]
          acc []]
-    (if frame
-      (let [[frames acc] (diff* frame frames acc)]
-        (recur frames acc))
+    (if group
+      (let [[groups acc] (diff* group groups acc)]
+        (recur groups acc))
       acc)))
