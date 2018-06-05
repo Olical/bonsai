@@ -7,6 +7,6 @@
   "license": "Unlicense",
   "private": false,
   "dependencies": {
-    "jsdom": "^11.6.2"
+    "jsdom": "^11.11.0"
   }
 }
