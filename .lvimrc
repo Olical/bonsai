@@ -1,0 +1,1 @@
+autocmd FileType clojure nnoremap <buffer> <silent> <localleader>rp :e dev/user.clj<cr>:Eval (cljs-repl)<cr>:bd<cr>
