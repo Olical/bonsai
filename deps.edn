@@ -10,5 +10,6 @@
            :test-clj {:extra-deps {com.cognitect/test-runner {:git/url "https://github.com/Olical/test-runner.git"
                                                               :sha "7c4f5bd4987ec514889c7cd7e3d13f4ef95f256b"}}
                       :main-opts ["-m" "cognitect.test-runner"]}
-           :test-cljs {:extra-deps {olical/cljs-test-runner {:mvn/version "1.0.0"}}
+           :test-cljs {:extra-deps {olical/cljs-test-runner {:git/url "https://github.com/Olical/cljs-test-runner.git"
+                                                             :sha "fdf680416e8b0e0d14610b8faa6e546ff15650f7"}}
                        :main-opts ["-m" "cljs-test-runner.main"]}}}
