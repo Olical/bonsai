@@ -1,8 +1,8 @@
-> This is a work in progress and is probably just going to be a research project, not intended for full production use. If it's really useful maybe I'll keep going until it _is_ production ready though. - @Olical 8th November 2017
+> This is a WORK IN PROGRESS and is probably just going to be a research project, not intended for full production use. If it's really useful maybe I'll keep going until it _is_ production ready though. - @Olical 8th November 2017
 
 # Bonsai [![Build Status](https://travis-ci.org/Olical/bonsai.svg?branch=master)](https://travis-ci.org/Olical/bonsai) [![Clojars Project](https://img.shields.io/clojars/v/olical/bonsai.svg)](https://clojars.org/olical/bonsai)
 
-Declarative DOM rendering with integrated state management for [ClojureScript][].
+Do not use this, I'm just tinkering with ideas still. What I want it to be some day: Declarative DOM rendering with integrated state management for [ClojureScript][].
 
 ## Inspiration
 

@@ -1,15 +1,4 @@
 {:deps {org.clojure/clojure {:mvn/version "1.9.0"}
-        org.clojure/clojurescript {:mvn/version "1.10.238"}
-        orchestra {:mvn/version "2017.11.12-1"}}
+        org.clojure/clojurescript {:mvn/version "1.10.339"}}
  :aliases {:dev {:extra-paths ["dev" "test"]
-                 :extra-deps {expound {:mvn/version "0.7.0"}
-                              com.cemerick/piggieback {:mvn/version "0.2.2"}
-                              org.clojure/tools.nrepl {:mvn/version "0.2.13"}
-                              cider/cider-nrepl {:mvn/version "0.17.0"}}
-                 :main-opts ["-m" "bonsai.dev.cider"]}
-           :test-clj {:extra-deps {com.cognitect/test-runner {:git/url "https://github.com/Olical/test-runner.git"
-                                                              :sha "7c4f5bd4987ec514889c7cd7e3d13f4ef95f256b"}}
-                      :main-opts ["-m" "cognitect.test-runner"]}
-           :test-cljs {:extra-deps {olical/cljs-test-runner {:git/url "https://github.com/Olical/cljs-test-runner.git"
-                                                             :sha "fdf680416e8b0e0d14610b8faa6e546ff15650f7"}}
-                       :main-opts ["-m" "cljs-test-runner.main"]}}}
+                 :extra-deps {}}}}
