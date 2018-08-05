@@ -1,5 +1,11 @@
 (ns bonsai.tree)
 
+(defn removed? [a b]
+  (and (seq a) (empty? b)))
+
+(defn added? [a b]
+  (and (empty? a) (seq b)))
+
 (defn diff [a b]
   (loop [acc []
          path []
@@ -9,11 +15,13 @@
     (if (= a b nil)
       acc
       (recur (cond
-               (and (seq a) (empty? b)) (conj acc [:remove (conj path index)])
-               (and (empty? a) (seq b)) (conj acc [:insert (conj path index) b])
+               (removed? a b) (conj acc [:remove (conj path index)])
+               (added? a b) (conj acc [:insert (conj path index) b])
                (not= a b) (conj acc [:replace (conj path index) b])
                :else acc)
              path
-             (inc index)
+             (if (seq b)
+               (inc index)
+               index)
              ar
              br))))
