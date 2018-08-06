@@ -13,8 +13,8 @@
     (t/is (= (tree/diff [nil [:y]] [[:x] [:z]]) [[:insert [0] [:x]] [:replace [1] [:z]]])))
 
   (t/testing "simple recursive tree diffs"
-    (t/is (= (tree/diff [[:x [:y "henlo" [:z "world"]]] [:same-tho nil nil]]
-                        [[:x [:y "Hello" [:z [:strong "World!"]]]] [:same-tho nil "This is new!"]])
+    (t/is (= (tree/diff [[:x [:y "henlo" [:z "world"]]] [:foo nil nil]]
+                        [[:x [:y "Hello" [:z [:strong "World!"]]]] [:foo nil "This is new!"]])
              [[:replace [0 0 0] "Hello"]
               [:replace [0 0 1 0] [:strong "World!"]]
               [:insert [1 1] "This is new!"]]))))
