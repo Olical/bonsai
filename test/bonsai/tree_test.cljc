@@ -20,7 +20,21 @@
                         [[:x [:y "Hello" [:z [:strong "World!"]]]] [:foo nil "This is new!"]])
              [[:replace [0 0 0] "Hello"]
               [:replace [0 0 1 0] [:strong "World!"]]
-              [:insert [1 1] "This is new!"]]))))
+              [:insert [1 1] "This is new!"]])))
+
+  (t/testing "very different trees"
+    (t/is (= (tree/diff [[:ul [:li "x"] [:li "y"] [:li "z"]]
+                         [:h1 "Hello"]
+                         [:p "from"]
+                         [:h2 "World!"]]
+                        [[:h1 "World!"]
+                         [:ol [:li "z"] [:li "y"] [:li "x"]]
+                         [:p "to"]
+                         [:p "Hello"]])
+             [[:replace [0] [:h1 "World!"]]
+              [:replace [1] [:ol [:li "z"] [:li "y"] [:li "x"]]]
+              [:replace [2 0] "to"]
+              [:replace [3] [:p "Hello"]]]))))
 
 (t/deftest render
   (t/testing "empty tree yields no render"
