@@ -1,4 +1,5 @@
-(ns bonsai.tree)
+(ns bonsai.tree
+  (:require [clojure.string :as str]))
 
 (defn added? [a-node b-node]
   (and (empty? a-node) (seq b-node)))
@@ -8,6 +9,8 @@
 
 ;; TODO Refactor out mundane recursion.
 ;; TODO Handle infinitely nested seqs of nodes inside trees.
+;; TODO Self documenting error messages.
+;; TODO A node parsing / normalising function that finds the kind, attributes and children.
 
 (defn diff
   ([a-tree b-tree]
@@ -16,11 +19,13 @@
    (loop [acc acc
           parent-path parent-path
           index 0
-          [a-node & a-tree] a-tree
-          [b-node & b-tree] b-tree]
-     (if (= a-node b-node a-tree b-tree nil)
+          a-tree a-tree
+          b-tree b-tree]
+     (if (and (empty? a-tree) (empty? b-tree))
        acc
-       (let [[a-kind & a-children] a-node
+       (let [[a-node & a-tree] a-tree
+             [b-node & b-tree] b-tree
+             [a-kind & a-children] a-node
              [b-kind & b-children] b-node
              path (conj parent-path index)]
          (recur (cond
@@ -33,3 +38,18 @@
                 (inc index)
                 a-tree
                 b-tree))))))
+
+(defn render [tree]
+  (loop [acc []
+         tree tree]
+    (if (empty? tree)
+      (str/join acc)
+      (let [[node & tree] tree]
+        (recur (cond
+                 (string? node) (conj acc node)
+                 (vector? node) (let [node-name (-> node first name)
+                                      open (str "<" node-name ">")
+                                      close (str "</" node-name ">")]
+                                  (conj acc open (render (rest node)) close))
+                 :else acc)
+               tree)))))
