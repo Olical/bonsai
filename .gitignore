@@ -1,4 +1,5 @@
 node_modules/
 cljs-test-runner-out/
 .cpcache/
+.cljs_node_repl/
 .nrepl-port
