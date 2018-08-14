@@ -1,6 +1,7 @@
 (ns bonsai.core-test
   (:require [clojure.test :as t]
-            [bonsai.core :as bonsai]))
+            [bonsai.core :as bonsai]
+            #?(:cljs jsdom)))
 
 (t/deftest html
   (t/testing "empty tree yields no html"
@@ -50,4 +51,8 @@
               [:replace [2 0] "to"]
               [:replace [3] [:p "Hello"]]]))))
 
-; (t/deftest patch)
+#?(:cljs
+   (t/deftest patch
+     (t/testing "patching from nothing to nothing yields... nothing"
+       (prn jsdom)
+       (t/is (= true false)))))

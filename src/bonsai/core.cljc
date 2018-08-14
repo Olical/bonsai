@@ -54,4 +54,5 @@
                 a-tree
                 b-tree))))))
 
-; (defn patch [])
+#?(:cljs
+   (defn patch []))
