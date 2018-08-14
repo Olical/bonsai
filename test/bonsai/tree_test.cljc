@@ -36,16 +36,16 @@
               [:replace [2 0] "to"]
               [:replace [3] [:p "Hello"]]]))))
 
-(t/deftest render
-  (t/testing "empty tree yields no render"
-    (t/is (= (tree/render nil) ""))
-    (t/is (= (tree/render []) "")))
+(t/deftest html
+  (t/testing "empty tree yields no html"
+    (t/is (= (tree/html nil) ""))
+    (t/is (= (tree/html []) "")))
 
   (t/testing "just a text node"
-    (t/is (= (tree/render ["Hi!"]) "Hi!")))
+    (t/is (= (tree/html ["Hi!"]) "Hi!")))
 
   (t/testing "simple trees"
-    (t/is (= (tree/render [[:p "Hello" ", " "World!"] [:p [:span "Hi!"]]])
+    (t/is (= (tree/html [[:p "Hello" ", " "World!"] [:p [:span "Hi!"]]])
              "<p>Hello, World!</p><p><span>Hi!</span></p>"))
-    (t/is (= (tree/render [[:ul [:li "x"] [:li "y"] [:li [:div "z"]]]])
+    (t/is (= (tree/html [[:ul [:li "x"] [:li "y"] [:li [:div "z"]]]])
              "<ul><li>x</li><li>y</li><li><div>z</div></li></ul>"))))

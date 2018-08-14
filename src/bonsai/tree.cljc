@@ -39,7 +39,7 @@
                 a-tree
                 b-tree))))))
 
-(defn render [tree]
+(defn html [tree]
   (loop [acc []
          tree tree]
     (if (empty? tree)
@@ -50,6 +50,6 @@
                  (vector? node) (let [node-name (-> node first name)
                                       open (str "<" node-name ">")
                                       close (str "</" node-name ">")]
-                                  (conj acc open (render (rest node)) close))
+                                  (conj acc open (html (rest node)) close))
                  :else acc)
                tree)))))
