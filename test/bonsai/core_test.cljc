@@ -2,6 +2,20 @@
   (:require [clojure.test :as t]
             [bonsai.core :as bonsai]))
 
+(t/deftest html
+  (t/testing "empty tree yields no html"
+    (t/is (= (bonsai/html nil) ""))
+    (t/is (= (bonsai/html []) "")))
+
+  (t/testing "just a text node"
+    (t/is (= (bonsai/html ["Hi!"]) "Hi!")))
+
+  (t/testing "simple trees"
+    (t/is (= (bonsai/html [[:p "Hello" ", " "World!"] [:p [:span "Hi!"]]])
+             "<p>Hello, World!</p><p><span>Hi!</span></p>"))
+    (t/is (= (bonsai/html [[:ul [:li "x"] [:li "y"] [:li [:div "z"]]]])
+             "<ul><li>x</li><li>y</li><li><div>z</div></li></ul>"))))
+
 (t/deftest diff
   (t/testing "empty trees yield no diff"
     (t/is (= (bonsai/diff nil nil) []))
@@ -36,16 +50,4 @@
               [:replace [2 0] "to"]
               [:replace [3] [:p "Hello"]]]))))
 
-(t/deftest html
-  (t/testing "empty tree yields no html"
-    (t/is (= (bonsai/html nil) ""))
-    (t/is (= (bonsai/html []) "")))
-
-  (t/testing "just a text node"
-    (t/is (= (bonsai/html ["Hi!"]) "Hi!")))
-
-  (t/testing "simple trees"
-    (t/is (= (bonsai/html [[:p "Hello" ", " "World!"] [:p [:span "Hi!"]]])
-             "<p>Hello, World!</p><p><span>Hi!</span></p>"))
-    (t/is (= (bonsai/html [[:ul [:li "x"] [:li "y"] [:li [:div "z"]]]])
-             "<ul><li>x</li><li>y</li><li><div>z</div></li></ul>"))))
+; (t/deftest patch)
