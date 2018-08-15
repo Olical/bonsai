@@ -1,4 +1,4 @@
-(ns bonsai.core
+(ns bonsai.tree
   (:require [clojure.string :as str]))
 
 (defn added? [a-node b-node]
