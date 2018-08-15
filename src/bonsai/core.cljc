@@ -53,6 +53,3 @@
                 (inc index)
                 a-tree
                 b-tree))))))
-
-#?(:cljs
-   (defn patch []))
