@@ -5,4 +5,4 @@
 
 (t/deftest patch
   (t/testing "patching nothing should yield no change"
-    (t/is (= (dom/patch {}) nil))))
+    (t/is (= (dom/patch) nil))))
