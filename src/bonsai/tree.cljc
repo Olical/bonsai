@@ -12,7 +12,7 @@
 ;; TODO Self documenting error messages.
 ;; TODO A node parsing / normalising function that finds the kind, attributes and children.
 
-(defn html [tree]
+(defn ->html [tree]
   (loop [acc []
          tree tree]
     (if (empty? tree)
@@ -23,7 +23,7 @@
                  (vector? node) (let [node-name (-> node first name)
                                       open (str "<" node-name ">")
                                       close (str "</" node-name ">")]
-                                  (conj acc open (html (rest node)) close))
+                                  (conj acc open (->html (rest node)) close))
                  :else acc)
                tree)))))
 
@@ -44,9 +44,9 @@
              [b-kind & b-children] b-node
              path (conj parent-path index)]
          (recur (cond
-                  (added? a-node b-node) (conj acc [:insert path b-node])
+                  (added? a-node b-node) (conj acc [:insert path [b-node]])
                   (removed? a-node b-node) (conj acc [:remove path])
-                  (not= a-kind b-kind) (conj acc [:replace path b-node])
+                  (not= a-kind b-kind) (conj acc [:replace path [b-node]])
                   (and (= a-kind b-kind) (not= a-children b-children)) (diff a-children b-children acc path)
                   :else acc)
                 parent-path

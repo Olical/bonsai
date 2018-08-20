@@ -12,4 +12,4 @@ test-cljs: yarn
 	clojure -A:scotch:test-cljs
 
 test-cljs-watch: yarn
-	clojure -A:scotch:test-cljs --watch test
+	clojure -A:scotch:test-cljs --watch src
