@@ -20,7 +20,6 @@
       (let [[node & tree] tree]
         (recur (cond
                  (string? node) (conj acc node)
-                 (nil? node) (conj acc "<!--nil-->")
                  (vector? node) (let [node-name (-> node first name)
                                       open (str "<" node-name ">")
                                       close (str "</" node-name ">")]
@@ -51,6 +50,8 @@
                   (and (= a-kind b-kind) (not= a-children b-children)) (diff a-children b-children acc path)
                   :else acc)
                 parent-path
-                (inc index)
+                (if (seq b-node)
+                  (inc index)
+                  index)
                 a-tree
                 b-tree))))))
