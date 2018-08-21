@@ -11,6 +11,7 @@
 ;; TODO Handle infinitely nested seqs of nodes inside trees.
 ;; TODO Self documenting error messages.
 ;; TODO A node parsing / normalising function that finds the kind, attributes and children.
+;; TODO Handle HTML entities in text nodes.
 
 (defn ->html [tree]
   (loop [acc []

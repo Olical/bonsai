@@ -63,4 +63,10 @@
       (batch-patch! node [[[:ul [:li "a"] nil [:li "c"]]]
                           [[:ul [:li "a"] nil [:li "c"] [:li "d"]]]
                           [[:ul [:li "a"] [:li "b"] [:li "c"]]]])
-      (t/is (= (->html node) "<ul><li>a</li><li>b</li><li>c</li></ul>")))))
+      (t/is (= (->html node) "<ul><li>a</li><li>b</li><li>c</li></ul>"))))
+
+  (t/testing "simple replacing"
+    (let [node (body)]
+      (batch-patch! node [["= " [:p "Hello"] " ="]
+                          ["= " [:p "Goodbye"] " ="]])
+      (t/is (= (->html node) "= <p>Goodbye</p> =")))))
