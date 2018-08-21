@@ -27,13 +27,13 @@
   (t/testing "simple diffs of flat trees"
     (t/is (= (tree/diff [[:x] [:y]] [nil [:y]]) [[:remove [0]]]))
     (t/is (= (tree/diff [nil [:y]] [[:x] [:y]]) [[:insert [0] [[:x]]]]))
-    (t/is (= (tree/diff [nil [:y]] [[:x] [:z]]) [[:insert [0] [[:x]]] [:replace [1] [[:z]]]])))
+    (t/is (= (tree/diff [nil [:y]] [[:x] [:z]]) [[:insert [0] [[:x]]] [:remove [1]] [:insert [1] [[:z]]]])))
 
   (t/testing "simple recursive tree diffs"
     (t/is (= (tree/diff [[:x [:y "henlo" [:z "world"]]] [:foo nil nil]]
                         [[:x [:y "Hello" [:z [:strong "World!"]]]] [:foo nil "This is new!"]])
-             [[:replace [0 0 0] ["Hello"]]
-              [:replace [0 0 1 0] [[:strong "World!"]]]
+             [[:remove [0 0 0]] [:insert [0 0 0] ["Hello"]]
+              [:remove [0 0 1 0]] [:insert [0 0 1 0] [[:strong "World!"]]]
               [:insert [1 0] ["This is new!"]]])))
 
   (t/testing "very different trees"
@@ -45,7 +45,7 @@
                          [:ol [:li "z"] [:li "y"] [:li "x"]]
                          [:p "to"]
                          [:p "Hello"]])
-             [[:replace [0] [[:h1 "World!"]]]
-              [:replace [1] [[:ol [:li "z"] [:li "y"] [:li "x"]]]]
-              [:replace [2 0] ["to"]]
-              [:replace [3] [[:p "Hello"]]]]))))
+             [[:remove [0]] [:insert [0] [[:h1 "World!"]]]
+              [:remove [1]] [:insert [1] [[:ol [:li "z"] [:li "y"] [:li "x"]]]]
+              [:remove [2 0]] [:insert [2 0] ["to"]]
+              [:remove [3]] [:insert [3] [[:p "Hello"]]]]))))

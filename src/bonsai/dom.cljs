@@ -23,8 +23,4 @@
                   (.insertBefore parent node target))
         :remove (let [target (path->node root path)
                       parent (.-parentNode target)]
-                  (.removeChild parent target))
-        :replace (let [target (path->node root path)
-                       parent (.-parentNode target)
-                       node (tree->node tree staging)]
-                   (.replaceChild parent node target))))))
+                  (.removeChild parent target))))))

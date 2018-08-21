@@ -47,7 +47,7 @@
          (recur (cond
                   (added? a-node b-node) (conj acc [:insert path [b-node]])
                   (removed? a-node b-node) (conj acc [:remove path])
-                  (not= a-kind b-kind) (conj acc [:replace path [b-node]])
+                  (not= a-kind b-kind) (conj acc [:remove path] [:insert path [b-node]])
                   (and (= a-kind b-kind) (not= a-children b-children)) (diff a-children b-children acc path)
                   :else acc)
                 parent-path
