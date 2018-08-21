@@ -2,12 +2,20 @@
   (:require [clojure.string :as str]
             [bonsai.tree :as tree]))
 
-(defn path->node [node [idx & path]]
-  (if idx
-    (recur (aget (.-children node) idx) path)
+(defn node->child [node n]
+  (aget (.-children node) n))
+
+(defn path->node [node [n & path]]
+  (if n
+    (recur (node->child node n) path)
     node))
 
-(defn patch! [host diff]
+(defn patch! [root diff]
   (doseq [[action path tree] diff]
     (case action
-      :insert (aset host "innerHTML" (tree/->html tree)))))
+      :insert (let [parent (path->node root (butlast path))
+                    target (node->child parent (inc (last path)))
+                    content (tree/->html tree)]
+                (if target
+                  (.insertAdjacentHTML target "beforebegin" content)
+                  (.insertAdjacentHTML parent "beforeend" content))))))

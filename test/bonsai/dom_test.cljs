@@ -14,6 +14,13 @@
 (defn ->html [node]
   (.-innerHTML node))
 
+(defn batch-patch! [node diffs]
+  (loop [a-tree []
+         [b-tree & diffs] diffs]
+    (when b-tree
+      (dom/patch! node (tree/diff a-tree b-tree))
+      (recur b-tree diffs))))
+
 (t/deftest path->node
   (t/testing "nil paths"
     (let [node (body "<p><span>Hello</span>, <span>World!</span></p>")]
@@ -35,4 +42,11 @@
   (t/testing "a simple patch can insert DOM nodes"
     (let [node (body)]
       (dom/patch! node (tree/diff [] [[:p "Hello, World!"]]))
-      (t/is (= (->html node) "<p>Hello, World!</p>")))))
+      (t/is (= (->html node) "<p>Hello, World!</p>"))))
+
+  (t/testing "multiple patches to insert at the end twice"
+    (let [node (body)]
+      (batch-patch! node [[[:p [:span "Hello"]]]
+                          [[:p [:span "Hello"] ", "]]
+                          [[:p [:span "Hello"] ", " [:span "World!"]]]])
+      (t/is (= (->html node) "<p><span>Hello</span>, <span>World!</span></p>")))))
