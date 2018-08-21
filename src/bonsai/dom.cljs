@@ -3,7 +3,7 @@
             [bonsai.tree :as tree]))
 
 (defn node->child [node n]
-  (aget (.-children node) n))
+  (aget (.-childNodes node) n))
 
 (defn path->node [node [n & path]]
   (if n

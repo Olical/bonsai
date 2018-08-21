@@ -20,6 +20,7 @@
       (let [[node & tree] tree]
         (recur (cond
                  (string? node) (conj acc node)
+                 (nil? node) (conj acc "<!--nil-->")
                  (vector? node) (let [node-name (-> node first name)
                                       open (str "<" node-name ">")
                                       close (str "</" node-name ">")]

@@ -28,7 +28,7 @@
 
   (t/testing "simple drill down"
     (let [node (body "<p><span>Hello</span>, <span>World!</span></p>")]
-      (t/is (= (.-innerHTML (dom/path->node node [0 1])) "World!")))))
+      (t/is (= (.-innerHTML (dom/path->node node [0 2])) "World!")))))
 
 (t/deftest patch!
   (t/testing "an empty patch does nothing"
@@ -48,5 +48,12 @@
     (let [node (body)]
       (batch-patch! node [[[:p [:span "Hello"]]]
                           [[:p [:span "Hello"] ", "]]
+                          [[:p [:span "Hello"] ", " [:span "World!"]]]])
+      (t/is (= (->html node) "<p><span>Hello</span>, <span>World!</span></p>"))))
+
+  #_(t/testing "multiple patches to insert in reverse with placeholder nils (without these it would be replace operations)"
+    (let [node (body)]
+      (batch-patch! node [[[:p nil nil [:span "World!"]]]
+                          [[:p nil ", " [:span "World!"]]]
                           [[:p [:span "Hello"] ", " [:span "World!"]]]])
       (t/is (= (->html node) "<p><span>Hello</span>, <span>World!</span></p>")))))

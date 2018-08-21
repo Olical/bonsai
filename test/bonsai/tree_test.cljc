@@ -14,7 +14,11 @@
     (t/is (= (tree/->html [[:p "Hello" ", " "World!"] [:p [:span "Hi!"]]])
              "<p>Hello, World!</p><p><span>Hi!</span></p>"))
     (t/is (= (tree/->html [[:ul [:li "x"] [:li "y"] [:li [:div "z"]]]])
-             "<ul><li>x</li><li>y</li><li><div>z</div></li></ul>"))))
+             "<ul><li>x</li><li>y</li><li><div>z</div></li></ul>")))
+
+  (t/testing "nil placeholder comments"
+    (t/is (= (tree/->html [[:p nil nil "World!"]])
+             "<p><!--nil--><!--nil-->World!</p>"))))
 
 (t/deftest diff
   (t/testing "empty trees yield no diff"
