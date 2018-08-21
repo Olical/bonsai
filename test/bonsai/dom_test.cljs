@@ -5,13 +5,25 @@
             [bonsai.tree :as tree]
             [jsdom :as jsdom]))
 
-(defn body []
-  (object/getValueByKeys (jsdom/JSDOM. "<body></body>") "window" "document" "body"))
+(defn body
+  ([]
+   (body ""))
+  ([content]
+   (object/getValueByKeys (jsdom/JSDOM. (str "<body>" content "</body>")) "window" "document" "body")))
 
 (defn ->html [node]
   (.-innerHTML node))
 
-(t/deftest patch
+(t/deftest path->node
+  (t/testing "nil paths"
+    (let [node (body "<p><span>Hello</span>, <span>World!</span></p>")]
+      (t/is (= (dom/path->node node [0 1 3]) nil))))
+
+  (t/testing "simple drill down"
+    (let [node (body "<p><span>Hello</span>, <span>World!</span></p>")]
+      (t/is (= (.-innerHTML (dom/path->node node [0 1])) "World!")))))
+
+(t/deftest patch!
   (t/testing "an empty patch does nothing"
     (let [node (body)]
       (dom/patch! node nil)
