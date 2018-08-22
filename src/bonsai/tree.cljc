@@ -45,8 +45,8 @@
             attr-str (when attrs
                        (str/join " " (map (fn [[k v]] (str (name k) "=\"" (escape-html-entities v) "\"")) attrs)))]
         (recur (cond
-                 (= kind ::text) (conj acc (escape-html-entities (first children)))
                  (= kind ::void) acc
+                 (= kind ::text) (conj acc (escape-html-entities (first children)))
                  :else (let [node-name (name kind)
                              open (str "<" node-name (when attr-str " ") attr-str ">")
                              close (str "</" node-name ">")]
