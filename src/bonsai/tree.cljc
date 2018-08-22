@@ -4,7 +4,7 @@
 ;; TODO Refactor out mundane recursion.
 ;; TODO Handle infinitely nested seqs of nodes inside trees.
 ;; TODO Self documenting error messages.
-;; TODO A node parsing / normalising function that finds the kind, attributes and children.
+;; TODO Use node parser in the diff/patch functions to support attrs everywhere.
 
 (defn added? [a-node b-node]
   (and (empty? a-node) (seq b-node)))
