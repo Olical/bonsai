@@ -14,7 +14,7 @@
 (defn ->html [node]
   (.-innerHTML node))
 
-(defn batch-patch! [node diffs]
+(defn patch-all! [node diffs]
   (loop [a-tree []
          [b-tree & diffs] diffs]
     (when b-tree
@@ -46,27 +46,27 @@
 
   (t/testing "multiple patches to insert from the end"
     (let [node (body)]
-      (batch-patch! node [[[:p [:span "Hello"]]]
+      (patch-all! node [[[:p [:span "Hello"]]]
                           [[:p [:span "Hello"] ", "]]
                           [[:p [:span "Hello"] ", " [:span "World!"]]]])
       (t/is (= (->html node) "<p><span>Hello</span>, <span>World!</span></p>"))))
 
   (t/testing "multiple patches to insert from the front"
     (let [node (body)]
-      (batch-patch! node [[[:p nil nil [:span "World!"]]]
+      (patch-all! node [[[:p nil nil [:span "World!"]]]
                           [[:p nil ", " [:span "World!"]]]
                           [[:p [:span "Hello"] ", " [:span "World!"]]]])
       (t/is (= (->html node) "<p><span>Hello</span>, <span>World!</span></p>"))))
 
   (t/testing "growing and shrinking"
     (let [node (body)]
-      (batch-patch! node [[[:ul [:li "a"] nil [:li "c"]]]
+      (patch-all! node [[[:ul [:li "a"] nil [:li "c"]]]
                           [[:ul [:li "a"] nil [:li "c"] [:li "d"]]]
                           [[:ul [:li "a"] [:li "b"] [:li "c"]]]])
       (t/is (= (->html node) "<ul><li>a</li><li>b</li><li>c</li></ul>"))))
 
   (t/testing "simple replacing"
     (let [node (body)]
-      (batch-patch! node [["=> " [:p "Hello"] " <="]
+      (patch-all! node [["=> " [:p "Hello"] " <="]
                           ["=> " [:p "Goodbye"] " <="]])
       (t/is (= (->html node) "=&gt; <p>Goodbye</p> &lt;=")))))
