@@ -13,24 +13,44 @@
   (and (seq a-node) (empty? b-node)))
 
 (def reserved-character-entities
-  {\& "&amp;"
-   \< "&lt;"
+  {\< "&lt;"
    \> "&gt;"
+   \& "&amp;"
    \" "&quot;"})
+
+(defn escape-html-entities [s]
+  (str/escape s reserved-character-entities))
+
+(defn parse-node [node]
+  (cond
+    (nil? node) [::void]
+    (string? node) [::text nil node]
+    :else (let [[kind & others] node
+                maybe-attrs (first others)
+                attrs? (map? maybe-attrs)]
+            (into [kind
+                   (when attrs?
+                     maybe-attrs)]
+                  (if attrs?
+                    (rest others)
+                    others)))))
 
 (defn ->html [tree]
   (loop [acc []
          tree tree]
     (if (empty? tree)
       (str/join acc)
-      (let [[node & tree] tree]
+      (let [[node & tree] tree
+            [kind attrs & children] (parse-node node)
+            attr-str (when attrs
+                       (str/join " " (map (fn [[k v]] (str (name k) "=\"" (escape-html-entities v) "\"")) attrs)))]
         (recur (cond
-                 (string? node) (conj acc (str/escape node reserved-character-entities))
-                 (vector? node) (let [node-name (-> node first name)
-                                      open (str "<" node-name ">")
-                                      close (str "</" node-name ">")]
-                                  (conj acc open (->html (rest node)) close))
-                 :else acc)
+                 (= kind ::text) (conj acc (escape-html-entities (first children)))
+                 (= kind ::void) acc
+                 :else (let [node-name (name kind)
+                             open (str "<" node-name (when attr-str " ") attr-str ">")
+                             close (str "</" node-name ">")]
+                        (conj acc open (->html children) close)))
                tree)))))
 
 (defn diff

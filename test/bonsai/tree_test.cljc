@@ -2,6 +2,19 @@
   (:require [clojure.test :as t]
             [bonsai.tree :as tree]))
 
+(t/deftest parse-node
+  (t/testing "nil is ::void"
+    (t/is (= (tree/parse-node nil) [::tree/void])))
+
+  (t/testing "strings are ::text"
+    (t/is (= (tree/parse-node "Hello!") [::tree/text nil "Hello!"])))
+
+  (t/testing "nodes without attrs"
+    (t/is (= (tree/parse-node [:p "Hello!"]) [:p nil "Hello!"])))
+
+  (t/testing "nodes with attrs"
+    (t/is (= (tree/parse-node [:p {:title "xyz"} "Hello!"]) [:p {:title "xyz"} "Hello!"]))))
+
 (t/deftest ->html
   (t/testing "empty tree yields no html"
     (t/is (= (tree/->html nil) ""))
@@ -18,7 +31,14 @@
 
   (t/testing "escaping reserved HTML characters"
     (t/is (= (tree/->html [[:p "This is text & <strong style=\"\">escaped!</strong>"]])
-             "<p>This is text &amp; &lt;strong style=&quot;&quot;&gt;escaped!&lt;/strong&gt;</p>"))))
+             "<p>This is text &amp; &lt;strong style=&quot;&quot;&gt;escaped!&lt;/strong&gt;</p>")))
+
+  (t/testing "simple text attributes"
+    (t/is (= (tree/->html [[:p {:title "Hello"} "World!"]])
+             "<p title=\"Hello\">World!</p>"))
+    (t/is (= (tree/->html [[:p {:title "Hello & \"you\""
+                                :name "&"} "World!"]])
+             "<p title=\"Hello &amp; &quot;you&quot;\" name=\"&amp;\">World!</p>"))))
 
 (t/deftest diff
   (t/testing "empty trees yield no diff"
