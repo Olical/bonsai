@@ -9,15 +9,19 @@
     (recur (node->child node n) path)
     node))
 
+(defn tree->node-fn [document]
+  (let [staging (.createElement document "div")]
+    (fn [tree]
+      (aset staging "innerHTML" (tree/->html tree))
+      (.-firstChild staging))))
+
 (defn patch! [root diff]
-  (let [staging (-> root (.-ownerDocument) (.createElement "div"))]
+  (let [tree->node (tree->node-fn (.-ownerDocument root))]
     (doseq [[action path tree] diff]
       (case action
         :insert (let [parent (path->node root (butlast path))
                       target (node->child parent (last path))
-                      node (do
-                             (aset staging "innerHTML" (tree/->html tree))
-                             (.-firstChild staging))]
+                      node (tree->node tree)]
                   (.insertBefore parent node target))
         :remove (let [target (path->node root path)
                       parent (.-parentNode target)]

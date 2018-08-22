@@ -21,6 +21,20 @@
       (dom/patch! node (tree/diff a-tree b-tree))
       (recur b-tree diffs))))
 
+(t/deftest node->child
+  (t/testing "an element that doesn't exist gives you nil"
+    (t/is (nil? (dom/node->child (body) 0))))
+
+  (t/testing "an element that does exist"
+    (t/is (= (.-outerHTML (dom/node->child (body "<p>Hi!</p>") 0))
+             "<p>Hi!</p>"))))
+
+(t/deftest tree->node-fn
+  (t/testing "allows us to convert trees to nodes"
+    (let [tree->node (dom/tree->node-fn (.-ownerDocument (body)))]
+      (t/is (= (.-outerHTML (tree->node [[:p "Hi!"]]))
+               "<p>Hi!</p>")))))
+
 (t/deftest path->node
   (t/testing "nil paths"
     (let [node (body "<p><span>Hello</span>, <span>World!</span></p>")]
