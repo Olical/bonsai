@@ -1,17 +1,22 @@
 (ns bonsai.tree
   (:require [clojure.string :as str]))
 
+;; TODO Refactor out mundane recursion.
+;; TODO Handle infinitely nested seqs of nodes inside trees.
+;; TODO Self documenting error messages.
+;; TODO A node parsing / normalising function that finds the kind, attributes and children.
+
 (defn added? [a-node b-node]
   (and (empty? a-node) (seq b-node)))
 
 (defn removed? [a-node b-node]
   (and (seq a-node) (empty? b-node)))
 
-;; TODO Refactor out mundane recursion.
-;; TODO Handle infinitely nested seqs of nodes inside trees.
-;; TODO Self documenting error messages.
-;; TODO A node parsing / normalising function that finds the kind, attributes and children.
-;; TODO Handle HTML entities in text nodes.
+(def reserved-character-entities
+  {\& "&amp;"
+   \< "&lt;"
+   \> "&gt;"
+   \" "&quot;"})
 
 (defn ->html [tree]
   (loop [acc []
@@ -20,7 +25,7 @@
       (str/join acc)
       (let [[node & tree] tree]
         (recur (cond
-                 (string? node) (conj acc node)
+                 (string? node) (conj acc (str/escape node reserved-character-entities))
                  (vector? node) (let [node-name (-> node first name)
                                       open (str "<" node-name ">")
                                       close (str "</" node-name ">")]

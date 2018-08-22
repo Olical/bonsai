@@ -67,6 +67,6 @@
 
   (t/testing "simple replacing"
     (let [node (body)]
-      (batch-patch! node [["= " [:p "Hello"] " ="]
-                          ["= " [:p "Goodbye"] " ="]])
-      (t/is (= (->html node) "= <p>Goodbye</p> =")))))
+      (batch-patch! node [["=> " [:p "Hello"] " <="]
+                          ["=> " [:p "Goodbye"] " <="]])
+      (t/is (= (->html node) "=&gt; <p>Goodbye</p> &lt;=")))))
