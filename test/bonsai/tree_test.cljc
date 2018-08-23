@@ -2,18 +2,18 @@
   (:require [clojure.test :as t]
             [bonsai.tree :as tree]))
 
-(t/deftest parse-node
+(t/deftest normalise-node
   (t/testing "nil is ::void"
-    (t/is (= (tree/parse-node nil) [::tree/void])))
+    (t/is (= (tree/normalise-node nil) [::tree/void nil nil])))
 
   (t/testing "strings are ::text"
-    (t/is (= (tree/parse-node "Hello!") [::tree/text nil "Hello!"])))
+    (t/is (= (tree/normalise-node "Hello!") [::tree/text nil "Hello!"])))
 
   (t/testing "nodes without attrs"
-    (t/is (= (tree/parse-node [:p "Hello!"]) [:p nil "Hello!"])))
+    (t/is (= (tree/normalise-node [:p "Hello!"]) [:p nil "Hello!"])))
 
   (t/testing "nodes with attrs"
-    (t/is (= (tree/parse-node [:p {:title "xyz"} "Hello!"]) [:p {:title "xyz"} "Hello!"]))))
+    (t/is (= (tree/normalise-node [:p {:title "xyz"} "Hello!"]) [:p {:title "xyz"} "Hello!"]))))
 
 (t/deftest ->html
   (t/testing "empty tree yields no html"
@@ -72,4 +72,10 @@
              [[:remove [0]] [:insert [0] [[:h1 "World!"]]]
               [:remove [1]] [:insert [1] [[:ol [:li "z"] [:li "y"] [:li "x"]]]]
               [:remove [2 0]] [:insert [2 0] ["to"]]
-              [:remove [3]] [:insert [3] [[:p "Hello"]]]]))))
+              [:remove [3]] [:insert [3] [[:p "Hello"]]]])))
+
+  #_(t/testing "with simple attributes"
+    (t/is (= (tree/diff [[:div [:p {:title "hi", :data-vanish "???"} "you"]]]
+                        [[:div [:p {:title "bye"} "you"]]])
+             [[:assoc [0 0] :title "bye"]
+              [:dissoc [0 0] :data-vanish]]))))

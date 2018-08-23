@@ -4,13 +4,17 @@
 ;; TODO Refactor out mundane recursion.
 ;; TODO Handle infinitely nested seqs of nodes inside trees.
 ;; TODO Self documenting error messages.
-;; TODO Use node parser in the diff/patch functions to support attrs everywhere.
+;; TODO Event and state system.
+;; TODO Diff attrs.
+
+(defn void? [[kind]]
+  (or (nil? kind) (= kind ::void)))
 
 (defn added? [a-node b-node]
-  (and (empty? a-node) (seq b-node)))
+  (and (void? a-node) (not (void? b-node))))
 
 (defn removed? [a-node b-node]
-  (and (seq a-node) (empty? b-node)))
+  (and (not (void? a-node)) (void? b-node)))
 
 (def reserved-character-entities
   {\< "&lt;"
@@ -21,9 +25,9 @@
 (defn escape-html-entities [s]
   (str/escape s reserved-character-entities))
 
-(defn parse-node [node]
+(defn normalise-node [node]
   (cond
-    (nil? node) [::void]
+    (nil? node) [::void nil nil]
     (string? node) [::text nil node]
     :else (let [[kind & others] node
                 maybe-attrs (first others)
@@ -41,7 +45,7 @@
     (if (empty? tree)
       (str/join acc)
       (let [[node & tree] tree
-            [kind attrs & children] (parse-node node)
+            [kind attrs & children] (normalise-node node)
             attr-str (when attrs
                        (str/join " " (map (fn [[k v]] (str (name k) "=\"" (escape-html-entities v) "\"")) attrs)))]
         (recur (cond
@@ -66,17 +70,19 @@
        acc
        (let [[a-node & a-tree] a-tree
              [b-node & b-tree] b-tree
-             [a-kind & a-children] a-node
-             [b-kind & b-children] b-node
+             [a-kind a-attrs & a-children] (normalise-node a-node)
+             [b-kind b-attrs & b-children] (normalise-node b-node)
              path (conj parent-path index)]
          (recur (cond
                   (added? a-node b-node) (conj acc [:insert path [b-node]])
                   (removed? a-node b-node) (conj acc [:remove path])
-                  (not= a-kind b-kind) (conj acc [:remove path] [:insert path [b-node]])
+                  (or (not= a-kind b-kind)
+                      (and (= a-kind b-kind ::text)
+                           (not= a-children b-children))) (conj acc [:remove path] [:insert path [b-node]])
                   (and (= a-kind b-kind) (not= a-children b-children)) (diff a-children b-children acc path)
                   :else acc)
                 parent-path
-                (if (seq b-node)
+                (if (not (void? b-node))
                   (inc index)
                   index)
                 a-tree
