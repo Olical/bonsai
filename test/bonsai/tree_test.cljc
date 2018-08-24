@@ -86,7 +86,7 @@
               [:remove [3]] [:insert [3] [[:p "Hello"]]]])))
 
   (t/testing "with simple attributes"
-    (t/is (= (tree/diff [[:div [:p {:title "hi", :data-vanish "???"} "you"]]]
-                        [[:div [:p {:title "bye"} "you"]]])
-             [[:assoc [0 0] :title "bye"]
-              [:dissoc [0 0] :data-vanish]]))))
+    (t/is (= (sort (tree/diff [[:div [:p {:title "hi", :data-vanish "???"} "you"]]]
+                              [[:div [:p {:title "bye"} "you"]]]))
+             [[:dissoc [0 0] :data-vanish]
+              [:assoc [0 0] :title "bye"]]))))
