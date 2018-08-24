@@ -83,4 +83,11 @@
     (let [node (body)]
       (patch-all! node [["=> " [:p "Hello"] " <="]
                           ["=> " [:p "Goodbye"] " <="]])
-      (t/is (= (->html node) "=&gt; <p>Goodbye</p> &lt;=")))))
+      (t/is (= (->html node) "=&gt; <p>Goodbye</p> &lt;="))))
+
+  (t/testing "altering attrs"
+    (let [node (body)]
+      (patch-all! node [[[:p {:foo "1"} "Hi!"]]
+                        [[:p {:foo "2" :bar "???"} "Hi!"]]
+                        [[:p {:foo "3"} "Hi!"]]])
+      (t/is (= (->html node) "<p foo=\"3\">Hi!</p>")))))

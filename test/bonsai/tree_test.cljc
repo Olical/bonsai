@@ -40,6 +40,17 @@
                                 :name "&"} "World!"]])
              "<p title=\"Hello &amp; &quot;you&quot;\" name=\"&amp;\">World!</p>"))))
 
+(t/deftest diff-attrs
+  (t/testing "identical attrs yield no diff"
+    (t/is (= (tree/diff-attrs [0] nil nil) []))
+    (t/is (= (tree/diff-attrs [0] {} {}) []))
+    (t/is (= (tree/diff-attrs [0] {:foo "hi"} {:foo "hi"}) [])))
+
+  (t/testing "simple diffs"
+    (t/is (= (tree/diff-attrs [0] {:bar "bye" :x :y} {:foo "hi" :x :y})
+             [[:dissoc [0] :bar]
+              [:assoc [0] :foo "hi"]]))))
+
 (t/deftest diff
   (t/testing "empty trees yield no diff"
     (t/is (= (tree/diff nil nil) []))
@@ -74,7 +85,7 @@
               [:remove [2 0]] [:insert [2 0] ["to"]]
               [:remove [3]] [:insert [3] [[:p "Hello"]]]])))
 
-  #_(t/testing "with simple attributes"
+  (t/testing "with simple attributes"
     (t/is (= (tree/diff [[:div [:p {:title "hi", :data-vanish "???"} "you"]]]
                         [[:div [:p {:title "bye"} "you"]]])
              [[:assoc [0 0] :title "bye"]
