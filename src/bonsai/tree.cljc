@@ -94,16 +94,17 @@
              [a-kind a-attrs & a-children] (normalise-node a-node)
              [b-kind b-attrs & b-children] (normalise-node b-node)
              path (conj parent-path index)]
-         (recur (into
-                  (cond
-                    (added? a-node b-node) (conj acc [:insert path [b-node]])
-                    (removed? a-node b-node) (conj acc [:remove path])
-                    (or (not= a-kind b-kind)
-                        (and (= a-kind b-kind ::text)
-                             (not= a-children b-children))) (conj acc [:remove path] [:insert path [b-node]])
-                    (and (= a-kind b-kind) (not= a-children b-children)) (diff a-children b-children acc path)
-                    :else acc)
-                  (diff-attrs path a-attrs b-attrs))
+         (recur (cond
+                  (added? a-node b-node) (conj acc [:insert path [b-node]])
+                  (removed? a-node b-node) (conj acc [:remove path])
+                  (or (not= a-kind b-kind)
+                      (and (= a-kind b-kind ::text)
+                           (not= a-children b-children))) (conj acc [:remove path] [:insert path [b-node]])
+                  (= a-kind b-kind) (into (if (not= a-children b-children)
+                                            (diff a-children b-children acc path)
+                                            acc)
+                                          (diff-attrs path a-attrs b-attrs))
+                  :else acc)
                 parent-path
                 (if (not (void? b-node))
                   (inc index)
