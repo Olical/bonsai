@@ -15,29 +15,28 @@
   (t/testing "nodes with attrs"
     (t/is (= (tree/normalise-node [:p {:title "xyz"} "Hello!"]) [:p {:title "xyz"} "Hello!"]))))
 
-(t/deftest ->html
+(t/deftest render
   (t/testing "empty tree yields no html"
-    (t/is (= (tree/->html nil) ""))
-    (t/is (= (tree/->html []) "")))
+    (t/is (= (:html (tree/render nil)) ""))
+    (t/is (= (:html (tree/render [])) "")))
 
   (t/testing "just a text node"
-    (t/is (= (tree/->html ["Hi!"]) "Hi!")))
+    (t/is (= (:html (tree/render ["Hi!"])) "Hi!")))
 
   (t/testing "simple trees"
-    (t/is (= (tree/->html [[:p "Hello" ", " "World!"] [:p [:span "Hi!"]]])
+    (t/is (= (:html (tree/render [[:p "Hello" ", " "World!"] [:p [:span "Hi!"]]]))
              "<p>Hello, World!</p><p><span>Hi!</span></p>"))
-    (t/is (= (tree/->html [[:ul [:li "x"] [:li "y"] [:li [:div "z"]]]])
+    (t/is (= (:html (tree/render [[:ul [:li "x"] [:li "y"] [:li [:div "z"]]]]))
              "<ul><li>x</li><li>y</li><li><div>z</div></li></ul>")))
 
   (t/testing "escaping reserved HTML characters"
-    (t/is (= (tree/->html [[:p "This is text & <strong style=\"\">escaped!</strong>"]])
+    (t/is (= (:html (tree/render [[:p "This is text & <strong style=\"\">escaped!</strong>"]]))
              "<p>This is text &amp; &lt;strong style=&quot;&quot;&gt;escaped!&lt;/strong&gt;</p>")))
 
   (t/testing "simple text attributes"
-    (t/is (= (tree/->html [[:p {:title "Hello"} "World!"]])
+    (t/is (= (:html (tree/render [[:p {:title "Hello"} "World!"]]))
              "<p title=\"Hello\">World!</p>"))
-    (t/is (= (tree/->html [[:p {:title "Hello & \"you\""
-                                :name "&"} "World!"]])
+    (t/is (= (:html (tree/render [[:p {:title "Hello & \"you\"", :name "&"} "World!"]]))
              "<p title=\"Hello &amp; &quot;you&quot;\" name=\"&amp;\">World!</p>"))))
 
 (t/deftest diff-attrs

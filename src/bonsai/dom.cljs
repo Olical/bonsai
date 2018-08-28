@@ -12,7 +12,7 @@
 (defn tree->node-fn [document]
   (let [staging (.createElement document "div")]
     (fn [tree]
-      (aset staging "innerHTML" (tree/->html tree))
+      (aset staging "innerHTML" (:html (tree/render tree)))
       (.-firstChild staging))))
 
 (defn patch! [root diff]

@@ -39,22 +39,24 @@
                     (rest others)
                     others)))))
 
-(defn ->html [tree]
-  (loop [acc []
+(defn render [tree]
+  (loop [acc {:html []
+              :diff []}
          tree tree]
     (if (empty? tree)
-      (str/join acc)
+      (update acc :html str/join)
       (let [[node & tree] tree
             [kind attrs & children] (normalise-node node)
             attr-str (when attrs
                        (str/join " " (map (fn [[k v]] (str (name k) "=\"" (escape-html-entities v) "\"")) attrs)))]
         (recur (cond
                  (= kind ::void) acc
-                 (= kind ::text) (conj acc (escape-html-entities (first children)))
+                 (= kind ::text) (update acc :html conj (escape-html-entities (first children)))
                  :else (let [node-name (name kind)
                              open (str "<" node-name (when attr-str " ") attr-str ">")
-                             close (str "</" node-name ">")]
-                        (conj acc open (->html children) close)))
+                             close (str "</" node-name ">")
+                             {:keys [html diff]} (render children)]
+                        (update acc :html conj open html close)))
                tree)))))
 
 (defn diff-attrs [path a b]
