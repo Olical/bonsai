@@ -62,7 +62,9 @@
                               open (str "<" node-name (when attr-str " ") attr-str ">")
                               close (str "</" node-name ">")
                               {:keys [html diff]} (render children path)]
-                          (update acc :html conj open html close)))
+                          (-> acc
+                              (update :html conj open html close)
+                              (cond-> (seq diff) (update :diff into diff)))))
                 (inc index)))))))
 
 (defn diff-attrs [path a b]
