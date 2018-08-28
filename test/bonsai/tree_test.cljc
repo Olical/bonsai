@@ -40,9 +40,9 @@
              "<p title=\"Hello &amp; &quot;you&quot;\" name=\"&amp;\">World!</p>")))
 
   #_(t/testing "event attrs generate diffs"
-    (t/is (= (tree/render [[:div {:on-click identity}]])
-             {:html "<div></div>"
-              :diff [[:listen [0] :click identity]]}))))
+      (t/is (= (tree/render [[:div {:on-click identity}]])
+               {:html "<div></div>"
+                :diff [[:listen [0] :click identity]]}))))
 
 (t/deftest diff-attrs
   (t/testing "identical attrs yield no diff"
@@ -53,7 +53,16 @@
   (t/testing "simple diffs"
     (t/is (= (tree/diff-attrs [0] {:bar "bye" :x :y} {:foo "hi" :x :y})
              [[:dissoc [0] :bar]
-              [:assoc [0] :foo "hi"]]))))
+              [:assoc [0] :foo "hi"]])))
+
+  #_(t/testing "events"
+      (t/is (= (tree/diff-attrs [0] {} {:on-click identity})
+               [[:add-listener [0] :click identity]]))
+      (t/is (= (tree/diff-attrs [0] {:on-click identity} {})
+               [[:remove-listener [0] :click identity]]))
+      (t/is (= (tree/diff-attrs [0] {:on-click +} {:on-click -})
+               [[:remove-listener [0] :click +]
+                [:add-listener [0] :click -]]))))
 
 (t/deftest diff
   (t/testing "empty trees yield no diff"
