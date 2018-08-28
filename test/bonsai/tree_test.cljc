@@ -37,7 +37,12 @@
     (t/is (= (:html (tree/render [[:p {:title "Hello"} "World!"]]))
              "<p title=\"Hello\">World!</p>"))
     (t/is (= (:html (tree/render [[:p {:title "Hello & \"you\"", :name "&"} "World!"]]))
-             "<p title=\"Hello &amp; &quot;you&quot;\" name=\"&amp;\">World!</p>"))))
+             "<p title=\"Hello &amp; &quot;you&quot;\" name=\"&amp;\">World!</p>")))
+
+  #_(t/testing "event attrs generate diffs"
+    (t/is (= (tree/render [[:div {:on-click identity}]])
+             {:html "<div></div>"
+              :diff [[:listen [0] :click identity]]}))))
 
 (t/deftest diff-attrs
   (t/testing "identical attrs yield no diff"

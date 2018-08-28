@@ -11,8 +11,8 @@
 
 (defn tree->node-fn [document]
   (let [staging (.createElement document "div")]
-    (fn [tree]
-      (aset staging "innerHTML" (:html (tree/render tree)))
+    (fn [tree path]
+      (aset staging "innerHTML" (:html (tree/render tree path)))
       (.-firstChild staging))))
 
 (defn patch! [root diff]
@@ -21,7 +21,7 @@
       (case action
         :insert (let [parent (path->node root (butlast path))
                       target (node->child parent (last path))
-                      node (tree->node item)]
+                      node (tree->node item path)]
                   (.insertBefore parent node target))
         :remove (let [target (path->node root path)
                       parent (.-parentNode target)]

@@ -39,25 +39,31 @@
                     (rest others)
                     others)))))
 
-(defn render [tree]
-  (loop [acc {:html []
-              :diff []}
-         tree tree]
-    (if (empty? tree)
-      (update acc :html str/join)
-      (let [[node & tree] tree
-            [kind attrs & children] (normalise-node node)
-            attr-str (when attrs
-                       (str/join " " (map (fn [[k v]] (str (name k) "=\"" (escape-html-entities v) "\"")) attrs)))]
-        (recur (cond
-                 (= kind ::void) acc
-                 (= kind ::text) (update acc :html conj (escape-html-entities (first children)))
-                 :else (let [node-name (name kind)
-                             open (str "<" node-name (when attr-str " ") attr-str ">")
-                             close (str "</" node-name ">")
-                             {:keys [html diff]} (render children)]
-                        (update acc :html conj open html close)))
-               tree)))))
+(defn render
+  ([tree]
+   (render tree []))
+  ([tree parent-path]
+   (loop [tree tree
+          acc {:html []
+               :diff []}
+          index 0]
+     (if (empty? tree)
+       (update acc :html str/join)
+       (let [[node & tree] tree
+             [kind attrs & children] (normalise-node node)
+             attr-str (when attrs
+                        (str/join " " (map (fn [[k v]] (str (name k) "=\"" (escape-html-entities v) "\"")) attrs)))
+             path (conj parent-path index)]
+         (recur tree
+                (cond
+                  (= kind ::void) acc
+                  (= kind ::text) (update acc :html conj (escape-html-entities (first children)))
+                  :else (let [node-name (name kind)
+                              open (str "<" node-name (when attr-str " ") attr-str ">")
+                              close (str "</" node-name ">")
+                              {:keys [html diff]} (render children path)]
+                          (update acc :html conj open html close)))
+                (inc index)))))))
 
 (defn diff-attrs [path a b]
   (if (= a b)
@@ -85,7 +91,6 @@
    (diff a-tree b-tree [] []))
   ([a-tree b-tree acc parent-path]
    (loop [acc acc
-          parent-path parent-path
           index 0
           a-tree a-tree
           b-tree b-tree]
@@ -107,7 +112,6 @@
                                             acc)
                                           (diff-attrs path a-attrs b-attrs))
                   :else acc)
-                parent-path
                 (if (not (void? b-node))
                   (inc index)
                   index)
