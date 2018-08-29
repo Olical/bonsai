@@ -39,6 +39,13 @@
                     (rest others)
                     others)))))
 
+(def listener-re #"^on-(.*)")
+
+(defn attr-kind [k]
+  (if (re-matches listener-re (name k))
+    :listener
+    :normal))
+
 (defn render
   ([tree]
    (render tree []))
@@ -51,8 +58,9 @@
        (update acc :html str/join)
        (let [[node & tree] tree
              [kind attrs & children] (normalise-node node)
-             attr-str (when attrs
-                        (str/join " " (map (fn [[k v]] (str (name k) "=\"" (escape-html-entities v) "\"")) attrs)))
+             {:keys [listener normal]} (group-by (comp attr-kind first) attrs)
+             attr-str (when (seq normal)
+                        (str/join " " (map (fn [[k v]] (str (name k) "=\"" (escape-html-entities v) "\"")) normal)))
              path (conj parent-path index)]
          (recur tree
                 (cond
@@ -64,6 +72,9 @@
                               {:keys [html diff]} (render children path)]
                           (-> acc
                               (update :html conj open html close)
+                              (update :diff into (map (fn [[k v]]
+                                                        [:listen path (->> k (name) (re-matches listener-re) (second) (keyword)) v])
+                                                      listener))
                               (cond-> (seq diff) (update :diff into diff)))))
                 (inc index)))))))
 

@@ -15,6 +15,11 @@
   (t/testing "nodes with attrs"
     (t/is (= (tree/normalise-node [:p {:title "xyz"} "Hello!"]) [:p {:title "xyz"} "Hello!"]))))
 
+(t/deftest attr-kind
+  (t/testing "we can tell if something is a normal string attribute or an event listener"
+    (t/is (= (tree/attr-kind :foo) :normal))
+    (t/is (= (tree/attr-kind :on-foo) :listener))))
+
 (t/deftest render
   (t/testing "empty tree yields no html"
     (t/is (= (:html (tree/render nil)) ""))
@@ -39,10 +44,13 @@
     (t/is (= (:html (tree/render [[:p {:title "Hello & \"you\"", :name "&"} "World!"]]))
              "<p title=\"Hello &amp; &quot;you&quot;\" name=\"&amp;\">World!</p>")))
 
-  #_(t/testing "event attrs generate diffs"
-      (t/is (= (tree/render [[:div {:on-click identity}]])
-               {:html "<div></div>"
-                :diff [[:listen [0] :click identity]]}))))
+  (t/testing "event attrs generate diffs"
+    (t/is (= (tree/render [[:div {:on-click identity}]])
+             {:html "<div></div>"
+              :diff [[:listen [0] :click identity]]}))
+    (t/is (= (tree/render [[:ul [:li] [:li [:div] [:div {:on-click identity}]]]])
+             {:html "<ul><li></li><li><div></div><div></div></li></ul>"
+              :diff [[:listen [0 1 1] :click identity]]}))))
 
 (t/deftest diff-attrs
   (t/testing "identical attrs yield no diff"
