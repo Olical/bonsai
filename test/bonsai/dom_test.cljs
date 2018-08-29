@@ -32,7 +32,7 @@
 (t/deftest tree->node-fn
   (t/testing "allows us to convert trees to nodes"
     (let [tree->node (dom/tree->node-fn (.-ownerDocument (body)))]
-      (t/is (= (.-outerHTML (tree->node [[:p "Hi!"]]))
+      (t/is (= (.-outerHTML (:node (tree->node [[:p "Hi!"]])))
                "<p>Hi!</p>")))))
 
 (t/deftest path->node
@@ -90,4 +90,13 @@
       (patch-all! node [[[:p {:foo "1"} "Hi!"]]
                         [[:p {:foo "2" :bar "???"} "Hi!"]]
                         [[:p {:foo "3"} "Hi!"]]])
-      (t/is (= (->html node) "<p foo=\"3\">Hi!</p>")))))
+      (t/is (= (->html node) "<p foo=\"3\">Hi!</p>"))))
+
+  ;; TODO Get diffs from rendering looped into the patching.
+  #_(t/testing "listeners"
+    (let [node (body)
+          result! (atom [])
+          push! (fn [v] (swap! result! conj v))]
+      (patch-all! node [[[:p {:on-click #(push! :a)}]]])
+      (.click (.-firstChild node))
+      (t/is (= @result! [:a])))))
