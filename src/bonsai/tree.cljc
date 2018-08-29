@@ -58,7 +58,7 @@
        (update acc :html str/join)
        (let [[node & tree] tree
              [kind attrs & children] (normalise-node node)
-             {:keys [listener normal]} (group-by (comp attr-kind first) attrs)
+             {:keys [normal listener]} (group-by (comp attr-kind first) attrs)
              attr-str (when (seq normal)
                         (str/join " " (map (fn [[k v]] (str (name k) "=\"" (escape-html-entities v) "\"")) normal)))
              path (conj parent-path index)]
@@ -73,12 +73,12 @@
                           (-> acc
                               (update :html conj open html close)
                               (update :diff into (map (fn [[k v]]
-                                                        [:listen path (->> k (name) (re-matches listener-re) (second) (keyword)) v])
+                                                        [:add-listener path k v])
                                                       listener))
                               (cond-> (seq diff) (update :diff into diff)))))
                 (inc index)))))))
 
-(defn diff-attrs [path a b]
+(defn diff-attrs [a b path]
   (if (= a b)
     []
     (let [a-keys (set (keys a))
@@ -91,11 +91,17 @@
                   b? (b-keys k)
                   av (k a)
                   bv (k b)]
-              (cond
-                (and a? (not b?)) (conj acc [:dissoc path k])
-                (or (and (not a?) b?)
-                    (and a? b? (not= av bv))) (conj acc [:assoc path k bv])
-                :else acc))
+              (case (attr-kind k)
+                :normal (cond
+                          (and a? (not b?)) (conj acc [:dissoc path k])
+                          (or (and (not a?) b?)
+                              (and a? b? (not= av bv))) (conj acc [:assoc path k bv])
+                          :else acc)
+                :listener (cond
+                            (and a? (not b?)) (conj acc [:remove-listener path k av])
+                            (and (not a?) b?) (conj acc [:add-listener path k bv])
+                            (and a? b? (not= av bv)) (conj acc [:remove-listener path k av] [:add-listener path k bv])
+                            :else acc)))
             remainder)
           acc)))))
 
@@ -123,7 +129,7 @@
                   (= a-kind b-kind) (into (if (not= a-children b-children)
                                             (diff a-children b-children acc path)
                                             acc)
-                                          (diff-attrs path a-attrs b-attrs))
+                                          (diff-attrs a-attrs b-attrs path))
                   :else acc)
                 (if (not (void? b-node))
                   (inc index)

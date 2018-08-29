@@ -47,30 +47,30 @@
   (t/testing "event attrs generate diffs"
     (t/is (= (tree/render [[:div {:on-click identity}]])
              {:html "<div></div>"
-              :diff [[:listen [0] :click identity]]}))
+              :diff [[:add-listener [0] :on-click identity]]}))
     (t/is (= (tree/render [[:ul [:li] [:li [:div] [:div {:on-click identity}]]]])
              {:html "<ul><li></li><li><div></div><div></div></li></ul>"
-              :diff [[:listen [0 1 1] :click identity]]}))))
+              :diff [[:add-listener [0 1 1] :on-click identity]]}))))
 
 (t/deftest diff-attrs
   (t/testing "identical attrs yield no diff"
-    (t/is (= (tree/diff-attrs [0] nil nil) []))
-    (t/is (= (tree/diff-attrs [0] {} {}) []))
-    (t/is (= (tree/diff-attrs [0] {:foo "hi"} {:foo "hi"}) [])))
+    (t/is (= (tree/diff-attrs nil nil [0]) []))
+    (t/is (= (tree/diff-attrs {} {} [0]) []))
+    (t/is (= (tree/diff-attrs {:foo "hi"} {:foo "hi"} [0]) [])))
 
   (t/testing "simple diffs"
-    (t/is (= (tree/diff-attrs [0] {:bar "bye" :x :y} {:foo "hi" :x :y})
+    (t/is (= (tree/diff-attrs {:bar "bye" :x :y} {:foo "hi" :x :y} [0])
              [[:dissoc [0] :bar]
               [:assoc [0] :foo "hi"]])))
 
-  #_(t/testing "events"
-      (t/is (= (tree/diff-attrs [0] {} {:on-click identity})
-               [[:add-listener [0] :click identity]]))
-      (t/is (= (tree/diff-attrs [0] {:on-click identity} {})
-               [[:remove-listener [0] :click identity]]))
-      (t/is (= (tree/diff-attrs [0] {:on-click +} {:on-click -})
-               [[:remove-listener [0] :click +]
-                [:add-listener [0] :click -]]))))
+  (t/testing "events"
+    (t/is (= (tree/diff-attrs {} {:on-click identity} [0])
+             [[:add-listener [0] :on-click identity]]))
+    (t/is (= (tree/diff-attrs {:on-click identity} {} [0])
+             [[:remove-listener [0] :on-click identity]]))
+    (t/is (= (tree/diff-attrs {:on-click +} {:on-click -} [0])
+             [[:remove-listener [0] :on-click +]
+              [:add-listener [0] :on-click -]]))))
 
 (t/deftest diff
   (t/testing "empty trees yield no diff"
@@ -106,8 +106,9 @@
               [:remove [2 0]] [:insert [2 0] ["to"]]
               [:remove [3]] [:insert [3] [[:p "Hello"]]]])))
 
-  (t/testing "with simple attributes"
+  (t/testing "with attributes"
     (t/is (= (sort (tree/diff [[:div [:p {:title "hi", :data-vanish "???"} "you"]]]
-                              [[:div [:p {:title "bye"} "you"]]]))
+                              [[:div [:p {:title "bye", :on-click +} "you"]]]))
              [[:dissoc [0 0] :data-vanish]
+              [:add-listener [0 0] :on-click +]
               [:assoc [0 0] :title "bye"]]))))
