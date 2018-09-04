@@ -36,7 +36,5 @@
                   (.removeChild parent target))
         :assoc (.setAttribute (path->node root path) (name item) attr-value)
         :dissoc (.removeAttribute (path->node root path) (name item))
-        :add-listener (let [target (path->node root path)]
-                        (.addEventListener target (attr-kw->listener-name item) attr-value))
-        :remove-listener (let [target (path->node root path)]
-                           (.removeEventListener target (attr-kw->listener-name item) attr-value))))))
+        :add-listener (.addEventListener (path->node root path) (attr-kw->listener-name item) attr-value)
+        :remove-listener (.removeEventListener (path->node root path) (attr-kw->listener-name item) attr-value)))))
