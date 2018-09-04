@@ -29,12 +29,6 @@
     (t/is (= (.-outerHTML (dom/node->child (body "<p>Hi!</p>") 0))
              "<p>Hi!</p>"))))
 
-(t/deftest tree->node-fn
-  (t/testing "allows us to convert trees to nodes"
-    (let [tree->node (dom/tree->node-fn (.-ownerDocument (body)))]
-      (t/is (= (.-outerHTML (:node (tree->node [[:p "Hi!"]])))
-               "<p>Hi!</p>")))))
-
 (t/deftest path->node
   (t/testing "nil paths"
     (let [node (body "<p><span>Hello</span>, <span>World!</span></p>")]
@@ -43,6 +37,16 @@
   (t/testing "simple drill down"
     (let [node (body "<p><span>Hello</span>, <span>World!</span></p>")]
       (t/is (= (.-innerHTML (dom/path->node node [0 2])) "World!")))))
+
+(t/deftest tree->node-fn
+  (t/testing "allows us to convert trees to nodes"
+    (let [tree->node (dom/tree->node-fn (.-ownerDocument (body)))]
+      (t/is (= (.-outerHTML (:node (tree->node [[:p "Hi!"]])))
+               "<p>Hi!</p>")))))
+
+(t/deftest attr-kw->listener-name
+  (t/testing "does what it says on the tin, innit"
+    (t/is (= (dom/attr-kw->listener-name :on-click) "click"))))
 
 (t/deftest patch!
   (t/testing "an empty patch does nothing"
@@ -61,28 +65,28 @@
   (t/testing "multiple patches to insert from the end"
     (let [node (body)]
       (patch-all! node [[[:p [:span "Hello"]]]
-                          [[:p [:span "Hello"] ", "]]
-                          [[:p [:span "Hello"] ", " [:span "World!"]]]])
+                        [[:p [:span "Hello"] ", "]]
+                        [[:p [:span "Hello"] ", " [:span "World!"]]]])
       (t/is (= (->html node) "<p><span>Hello</span>, <span>World!</span></p>"))))
 
   (t/testing "multiple patches to insert from the front"
     (let [node (body)]
       (patch-all! node [[[:p nil nil [:span "World!"]]]
-                          [[:p nil ", " [:span "World!"]]]
-                          [[:p [:span "Hello"] ", " [:span "World!"]]]])
+                        [[:p nil ", " [:span "World!"]]]
+                        [[:p [:span "Hello"] ", " [:span "World!"]]]])
       (t/is (= (->html node) "<p><span>Hello</span>, <span>World!</span></p>"))))
 
   (t/testing "growing and shrinking"
     (let [node (body)]
       (patch-all! node [[[:ul [:li "a"] nil [:li "c"]]]
-                          [[:ul [:li "a"] nil [:li "c"] [:li "d"]]]
-                          [[:ul [:li "a"] [:li "b"] [:li "c"]]]])
+                        [[:ul [:li "a"] nil [:li "c"] [:li "d"]]]
+                        [[:ul [:li "a"] [:li "b"] [:li "c"]]]])
       (t/is (= (->html node) "<ul><li>a</li><li>b</li><li>c</li></ul>"))))
 
   (t/testing "simple replacing"
     (let [node (body)]
       (patch-all! node [["=> " [:p "Hello"] " <="]
-                          ["=> " [:p "Goodbye"] " <="]])
+                        ["=> " [:p "Goodbye"] " <="]])
       (t/is (= (->html node) "=&gt; <p>Goodbye</p> &lt;="))))
 
   (t/testing "altering attrs"
@@ -92,11 +96,18 @@
                         [[:p {:foo "3"} "Hi!"]]])
       (t/is (= (->html node) "<p foo=\"3\">Hi!</p>"))))
 
-  ;; TODO Get diffs from rendering looped into the patching.
-  #_(t/testing "listeners"
+  (t/testing "listeners"
     (let [node (body)
           result! (atom [])
           push! (fn [v] (swap! result! conj v))]
       (patch-all! node [[[:p {:on-click #(push! :a)}]]])
       (.click (.-firstChild node))
-      (t/is (= @result! [:a])))))
+      (t/is (= @result! [:a])))
+
+    (let [node (body)
+          result! (atom [])
+          push! (fn [v] (swap! result! conj v))]
+      (patch-all! node [[[:p {:on-click #(push! :a)}]]
+                        [[:p]]])
+      (.click (.-firstChild node))
+      (t/is (= @result! [])))))

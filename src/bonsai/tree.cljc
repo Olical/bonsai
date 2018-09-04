@@ -2,10 +2,10 @@
   (:require [clojure.string :as str]
             [clojure.set :as set]))
 
-;; TODO Refactor out mundane recursion.
+;; TODO Refactor out all mundane recursion.
 ;; TODO Handle infinitely nested seqs of nodes inside trees.
 ;; TODO Self documenting error messages.
-;; TODO Event and state system.
+;; TODO State system.
 
 (defn void? [[kind]]
   (or (nil? kind) (= kind ::void)))

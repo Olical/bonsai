@@ -17,16 +17,26 @@
         {:node (.-firstChild staging)
          :diff diff}))))
 
+(defn attr-kw->listener-name [kw]
+  (second (re-matches tree/listener-re (name kw))))
+
 (defn patch! [root diff]
   (let [tree->node (tree->node-fn (.-ownerDocument root))]
     (doseq [[action path item attr-value] diff]
       (case action
-        :insert (let [parent (path->node root (butlast path))
+        :insert (let [parent-path (butlast path)
+                      parent (path->node root parent-path)
                       target (node->child parent (last path))
-                      {node :node, extra-diff diff} (tree->node item path)]
-                  (.insertBefore parent node target))
+                      {node :node, render-diff :diff} (tree->node item parent-path)]
+                  (.insertBefore parent node target)
+                  (when (seq render-diff)
+                    (patch! root render-diff)))
         :remove (let [target (path->node root path)
                       parent (.-parentNode target)]
                   (.removeChild parent target))
         :assoc (.setAttribute (path->node root path) (name item) attr-value)
-        :dissoc (.removeAttribute (path->node root path) (name item))))))
+        :dissoc (.removeAttribute (path->node root path) (name item))
+        :add-listener (let [target (path->node root path)]
+                        (.addEventListener target (attr-kw->listener-name item) attr-value))
+        :remove-listener (let [target (path->node root path)]
+                           (.removeEventListener target (attr-kw->listener-name item) attr-value))))))
